@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% block title %}Услуги{% endblock %}
+{% block page_title %}Услуги{% endblock %}
+{% block topbar_actions %}<a href="/admin/services/new" class="btn btn-primary">+ Добавить услугу</a>{% endblock %}
+{% block content %}
+<div class="card" style="padding:0"><div class="table-wrap"><table>
+  <thead><tr><th>ID</th><th>Название</th><th>Цена от</th><th>Активна</th><th>Главная</th><th>Действия</th></tr></thead>
+  <tbody>
+    {% for s in services %}
+    <tr>
+      <td style="color:var(--muted)">{{ s.id }}</td>
+      <td>{{ s.name }}</td>
+      <td>{{ "{:,.0f}".format(s.price_from) if s.price_from else '—' }} ₽</td>
+      <td>{% if s.is_active %}<span style="color:var(--green)">✓</span>{% else %}<span style="color:var(--red)">✗</span>{% endif %}</td>
+      <td>{% if s.is_featured %}<span style="color:var(--accent)">★</span>{% else %}—{% endif %}</td>
+      <td><form method="post" action="/admin/services/{{ s.id }}/delete" onsubmit="return confirm('Удалить?')" style="margin:0"><button class="btn btn-danger btn-sm">Удалить</button></form></td>
+    </tr>
+    {% else %}<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">Услуг нет</td></tr>
+    {% endfor %}
+  </tbody>
+</table></div></div>
+{% endblock %}

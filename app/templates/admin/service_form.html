@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать услугу' if service else 'Новая услуга' }}{% endblock %}
+{% block page_title %}{{ 'Редактировать: ' + service.name if service else 'Добавить услугу' }}{% endblock %}
+{% block topbar_actions %}<a href="/admin/services" class="btn btn-secondary">← Назад</a>{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" style="max-width:700px">
+  <div class="card">
+    <div class="fg"><label>Название *</label>
+      <input type="text" name="name" value="{{ service.name if service else '' }}" required placeholder="Монтаж систем видеонаблюдения">
+    </div>
+    <div class="fg"><label>Краткое описание (для карточки)</label>
+      <textarea name="short_description" rows="2">{{ service.short_description if service else '' }}</textarea>
+    </div>
+    <div class="fg"><label>Полное описание</label>
+      <textarea name="description" rows="6">{{ service.description if service else '' }}</textarea>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Цена от, ₽</label>
+        <input type="number" name="price_from" value="{{ service.price_from if service else '0' }}" step="0.01" min="0">
+      </div>
+      <div class="fg"><label>Цена до, ₽</label>
+        <input type="number" name="price_to" value="{{ service.price_to if service else '0' }}" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Иконка</label>
+        <input type="text" name="icon" value="{{ service.icon if service else 'shield' }}">
+      </div>
+      <div class="fg"><label>Сортировка</label>
+        <input type="number" name="sort_order" value="{{ service.sort_order if service else '0' }}">
+      </div>
+    </div>
+    <div class="fg"><label>Изображение</label>
+      <input type="file" name="image" accept="image/*">
+      {% if service and service.image_url %}
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+          <img src="{{ service.image_url }}" style="width:80px;height:60px;object-fit:cover;border-radius:4px">
+          <label class="fg-check"><input type="checkbox" name="delete_image" value="1"> Удалить фото</label>
+        </div>
+      {% endif %}
+    </div>
+    <label class="fg-check"><input type="checkbox" name="is_active" value="true" {{ 'checked' if not service or service.is_active }}> Активна</label>
+    <label class="fg-check"><input type="checkbox" name="is_featured" value="true" {{ 'checked' if service and service.is_featured }}> На главной</label>
+
+    <div style="margin-top:16px">
+      {% if auto_seo %}
+      <div style="background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:12px">
+        <div style="color:var(--accent);font-weight:600;margin-bottom:8px">🤖 Автогенерация SEO:</div>
+        <div style="color:var(--muted);margin-bottom:4px"><b>Заголовок:</b> {{ auto_seo.title }}</div>
+        <div style="color:var(--muted)"><b>Описание:</b> {{ auto_seo.description }}</div>
+      </div>
+      {% endif %}
+      <div class="fg"><label>SEO заголовок</label>
+        <input type="text" name="seo_title" value="{{ service.seo_title if service else '' }}" maxlength="70" placeholder="Оставьте пустым — автогенерация">
+      </div>
+      <div class="fg"><label>SEO описание</label>
+        <textarea name="seo_description" rows="2" maxlength="160" placeholder="Оставьте пустым — автогенерация">{{ service.seo_description if service else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button type="submit" class="btn btn-primary">{% if service %}Сохранить{% else %}Создать услугу{% endif %}</button>
+    <a href="/admin/services" class="btn btn-secondary">Отмена</a>
+  </div>
+</form>
+{% endblock %}

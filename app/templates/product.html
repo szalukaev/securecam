@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="breadcrumbs">
+    <a href="/">Главная</a> /
+    <a href="/catalog">Каталог</a> /
+    {% if product.category %}<a href="/catalog/category/{{ product.category.slug }}">{{ product.category.name }}</a> / {% endif %}
+    <span>{{ product.name }}</span>
+  </div>
+
+  <div class="product-detail">
+    <!-- Gallery -->
+    <div class="product-gallery">
+      <div class="gallery-main">
+        {% if product.images %}
+          <img src="{{ product.images[0] }}" alt="{{ product.name }}" id="main-img">
+        {% else %}
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </div>
+        {% endif %}
+      </div>
+      {% if product.images and product.images|length > 1 %}
+      <div class="gallery-thumbs">
+        {% for img in product.images %}
+        <div class="gallery-thumb {% if loop.first %}active{% endif %}">
+          <img src="{{ img }}" alt="{{ product.name }} фото {{ loop.index }}">
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if product.video_url %}
+      <div style="margin-top:16px">
+        <a href="{{ product.video_url }}" target="_blank" class="btn-outline" style="width:100%; justify-content:center; gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Смотреть видеообзор на RuTube
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div class="product-info" x-data="{ qty: 1, added: false }">
+      {% if product.brand %}
+        <div class="product-brand-badge"><span class="tag">{{ product.brand }}</span></div>
+      {% endif %}
+      <h1>{{ product.name }}</h1>
+      {% if product.sku %}<p class="sku">Арт.: {{ product.sku }}</p>{% endif %}
+
+      <div class="price-block">
+        <div>
+          <span class="price-main">{{ "{:,.0f}".format(product.price) }} ₽</span>
+          {% if product.old_price > product.price and product.old_price > 0 %}
+            <span class="price-old">{{ "{:,.0f}".format(product.old_price) }} ₽</span>
+          {% endif %}
+        </div>
+        <div class="stock-badge {% if product.in_stock %}in{% else %}out{% endif %}">
+          {% if product.in_stock %}✓ В наличии{% else %}Под заказ{% endif %}
+        </div>
+      </div>
+
+      {% if product.short_description %}
+      <p style="color:var(--text-dim); font-size:15px; margin-bottom:24px; line-height:1.7">{{ product.short_description }}</p>
+      {% endif %}
+
+      <div class="add-to-cart-row">
+        <div class="qty-ctrl">
+          <button @click="qty = Math.max(1, qty - 1)">−</button>
+          <input type="number" x-model="qty" min="1" max="99">
+          <button @click="qty++">+</button>
+        </div>
+        <button class="btn-primary" style="flex:1"
+          @click="for(let i=0;i<qty;i++) cart.add({ id: {{ product.id }}, name: '{{ product.name | replace("'","\\'")|replace('"','\\"') }}', sku: '{{ product.sku }}', price: {{ product.price }} }); added=true">
+          <template x-if="!added">
+            <span style="display:flex;align-items:center;gap:8px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              В корзину
+            </span>
+          </template>
+          <template x-if="added">
+            <span>✓ Добавлено</span>
+          </template>
+        </button>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:28px">
+        <a href="tel:{{ site_phone|replace(' ','') }}" class="btn-outline" style="flex:1;justify-content:center">
+          Позвонить
+        </a>
+      </div>
+
+      <!-- Advantages row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-dim)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Официальная гарантия
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-dim)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          Доставка по Екатеринбургу
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-dim)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
+          Монтаж и настройка
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-dim)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><path d="M1.6 4.4A2 2 0 0 1 3.57 2.19h3a2 2 0 0 1 2 1.72"/></svg>
+          Поддержка 24/7
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab-list">
+          <button class="tab-btn active" data-tab="tab-desc">Описание</button>
+          {% if product.specs %}
+            <button class="tab-btn" data-tab="tab-specs">Характеристики</button>
+          {% endif %}
+        </div>
+        <div class="tab-content">
+          <div id="tab-desc" class="tab-pane">
+            {{ product.description | safe if product.description else "Описание не указано." }}
+          </div>
+          {% if product.specs %}
+          <div id="tab-specs" class="tab-pane" hidden>
+            <table class="specs-table">
+              {% for key, val in product.specs.items() %}
+              <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
+              {% endfor %}
+            </table>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related %}
+  <section style="padding:60px 0 40px">
+    <h2 class="section-title" style="margin-bottom:28px">Похожие <span>товары</span></h2>
+    <div class="products-grid">
+      {% for p in related %}
+      <div class="product-card">
+        <div class="product-img-wrap">
+          {% if p.images %}<img src="{{ p.images[0] }}" alt="{{ p.name }}" loading="lazy">
+          {% else %}<div class="product-no-img"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>{% endif %}
+        </div>
+        <div class="product-body">
+          {% if p.brand %}<div class="product-brand">{{ p.brand }}</div>{% endif %}
+          <div class="product-name"><a href="/catalog/{{ p.slug }}">{{ p.name }}</a></div>
+          <div class="product-price-row">
+            <div class="product-price">{{ "{:,.0f}".format(p.price) }} ₽</div>
+            <button class="product-add-btn"
+              @click="cart.add({ id: {{ p.id }}, name: '{{ p.name | replace("'","\\'") }}', sku: '{{ p.sku }}', price: {{ p.price }} })">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

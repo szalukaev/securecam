@@ -1,0 +1,33 @@
+# Файлы окружения
+.env
+.env.local
+.env.*.local
+
+# Логи
+*.log
+logs/
+error_log
+access_log
+
+# Кеш и временные файлы
+tmp/
+cache/
+*.tmp
+
+# Конфигурации сервера (если не должны быть в репозитории)
+.htaccess
+nginx.conf
+php.ini
+
+# Папки зависимостей (если проект на PHP/Node.js)
+vendor/
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Системные файлы
+.DS_Store
+Thumbs.db

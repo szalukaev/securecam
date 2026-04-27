@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+{% block title %}Предпросмотр импорта{% endblock %}
+{% block page_title %}Предпросмотр импорта ({{ total }} товаров){% endblock %}
+{% block topbar_actions %}<a href="/admin/import" class="btn btn-secondary">← Назад</a>{% endblock %}
+{% block content %}
+<form method="post" action="/admin/import/execute">
+  <input type="hidden" name="tmp_file" value="{{ tmp_file }}">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+    <!-- Маппинг категорий -->
+    <div class="card">
+      <div class="card-title">Сопоставление категорий</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Сопоставьте категории из файла с категориями на сайте</p>
+      {% for fc in file_cats %}
+      <div class="fg" style="margin-bottom:12px">
+        <label style="color:var(--text)">{{ fc }}</label>
+        <select name="cat_map_{{ fc }}">
+          <option value="">— создать автоматически —</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}" {{ 'selected' if cat.name.lower() == fc.lower() }}>
+            {{ '└─ ' if cat.parent_id else '' }}{{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Маппинг брендов -->
+    <div class="card">
+      <div class="card-title">Сопоставление брендов</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Сопоставьте бренды из файла со справочником брендов</p>
+      {% for fb in file_brands %}
+      <div class="fg" style="margin-bottom:12px">
+        <label style="color:var(--text)">{{ fb }}</label>
+        <select name="brand_map_{{ fb }}">
+          <option value="">— оставить текстом —</option>
+          {% for b in brands_list %}
+          <option value="{{ b.id }}" {{ 'selected' if b.name.lower() == fb.lower() }}>{{ b.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Превью данных -->
+  <div class="card">
+    <div class="card-title">Первые 5 записей из файла</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Название</th><th>Краткое описание</th><th>Цена</th><th>Категория</th><th>Бренд</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.name[:50] }}{% if row.name|length > 50 %}...{% endif %}</td>
+            <td style="color:var(--muted)">{{ row.short_description[:60] }}{% if row.short_description|length > 60 %}...{% endif %}</td>
+            <td>{{ "{:,.0f}".format(row.price) }} ₽</td>
+            <td>{{ row.category }}</td>
+            <td>{{ row.brand }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:16px;align-items:center">
+    <button type="submit" class="btn btn-primary">
+      ✓ Импортировать {{ total }} товаров
+    </button>
+    <a href="/admin/import" class="btn btn-secondary">Отмена</a>
+    <span style="color:var(--muted);font-size:13px">Существующие товары будут обновлены, новые — созданы</span>
+  </div>
+</form>
+{% endblock %}

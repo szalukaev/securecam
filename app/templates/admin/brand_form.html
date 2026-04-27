@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать бренд' if brand else 'Новый бренд' }}{% endblock %}
+{% block page_title %}{{ 'Редактировать: ' + brand.name if brand else 'Добавить бренд' }}{% endblock %}
+{% block topbar_actions %}<a href="/admin/brands" class="btn btn-secondary">← Назад</a>{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
+  <div>
+    <div class="card">
+      <div class="card-title">Основное</div>
+      <div class="fg"><label>Название *</label><input type="text" name="name" value="{{ brand.name if brand else '' }}" required placeholder="Hikvision"></div>
+      <div class="fg"><label>Сайт производителя</label><input type="url" name="website" value="{{ brand.website if brand else '' }}" placeholder="https://hikvision.ru"></div>
+      <div class="fg"><label>Описание</label><textarea name="description" rows="4" placeholder="Краткое описание бренда...">{{ brand.description if brand else '' }}</textarea></div>
+      <div class="fg"><label>Логотип</label><input type="file" name="logo" accept="image/*">
+        {% if brand and brand.logo_url %}
+          <div style="margin-top:8px;display:flex;align-items:center;gap:12px">
+            <img src="{{ brand.logo_url }}" style="height:40px;max-width:120px;object-fit:contain;background:var(--bg-card);padding:4px;border-radius:4px">
+            <label class="fg-check"><input type="checkbox" name="delete_logo" value="1"> Удалить лого</label>
+          </div>
+        {% endif %}
+      </div>
+      <div class="card-title" style="margin-top:16px">SEO</div>
+      <div class="fg"><label>SEO заголовок</label><input type="text" name="seo_title" value="{{ brand.seo_title if brand else '' }}" maxlength="70"></div>
+      <div class="fg"><label>SEO описание</label><textarea name="seo_description" rows="2" maxlength="160">{{ brand.seo_description if brand else '' }}</textarea></div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="card-title">Настройки</div>
+      <label class="fg-check"><input type="checkbox" name="is_official_dealer" value="true" {{ 'checked' if not brand or brand.is_official_dealer }}> Официальный дилер</label>
+      <label class="fg-check"><input type="checkbox" name="show_in_catalog" value="true" {{ 'checked' if not brand or brand.show_in_catalog }}> Показывать в каталоге</label>
+      <label class="fg-check"><input type="checkbox" name="show_in_footer" value="true" {{ 'checked' if brand and brand.show_in_footer }}> Показывать в подвале сайта</label>
+      <div class="fg" style="margin-top:12px"><label>Порядок сортировки</label><input type="number" name="sort_order" value="{{ brand.sort_order if brand else '0' }}"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">{{ 'Сохранить' if brand else 'Создать бренд' }}</button>
+      <a href="/admin/brands" class="btn btn-secondary" style="width:100%;justify-content:center">Отмена</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

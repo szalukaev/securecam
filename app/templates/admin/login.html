@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Вход — Админ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#080d11;color:#e8edf2;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background-image:linear-gradient(rgba(0,229,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.015) 1px,transparent 1px);
+      background-size:40px 40px}
+    .login-box{background:#111823;border:1px solid rgba(0,229,255,0.15);border-radius:12px;padding:48px 40px;width:380px}
+    .login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+    .login-logo span{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700}
+    h2{font-family:'Rajdhani',sans-serif;font-size:28px;margin-bottom:24px;text-align:center}
+    label{display:block;font-size:12px;color:#7a8fa8;margin-bottom:6px}
+    input{width:100%;background:#080d11;border:1px solid rgba(0,229,255,0.15);color:#e8edf2;padding:11px 14px;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:16px;transition:border-color 0.2s}
+    input:focus{border-color:#00e5ff}
+    button{width:100%;background:#00e5ff;color:#000;padding:12px;border:none;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase;margin-top:4px}
+    button:hover{filter:brightness(1.1)}
+    .error{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:#ff4d6d;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:16px}
+  </style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="rgba(0,229,255,0.12)"/><path d="M6 10 L16 6 L26 10 L26 18 Q16 26 16 26 Q16 26 6 18 Z" stroke="#00e5ff" stroke-width="1.5" fill="none"/><circle cx="16" cy="15" r="3.5" stroke="#00e5ff" stroke-width="1.5" fill="none"/></svg>
+    <span>Панель управления</span>
+  </div>
+  <h2>Вход</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/admin/login">
+    <div><label>Логин</label><input type="text" name="login" autofocus required placeholder="admin"></div>
+    <div><label>Пароль</label><input type="password" name="password" required placeholder="••••••••"></div>
+    <button type="submit">Войти</button>
+  </form>
+</div>
+</body>
+</html>

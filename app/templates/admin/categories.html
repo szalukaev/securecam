@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Категории{% endblock %}
+{% block page_title %}Категории{% endblock %}
+{% block topbar_actions %}<a href="/admin/categories/new" class="btn btn-primary">+ Добавить</a>{% endblock %}
+{% block content %}
+<div class="card" style="padding:0">
+<div class="table-wrap"><table>
+  <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Родитель</th><th>Порядок</th><th>Действия</th></tr></thead>
+  <tbody>
+    {% for cat in categories %}
+    <tr>
+      <td style="color:var(--muted)">{{ cat.id }}</td>
+      <td>{{ cat.name }}</td>
+      <td style="color:var(--muted)">{{ cat.slug }}</td>
+      <td>{{ cat.parent.name if cat.parent else '—' }}</td>
+      <td>{{ cat.sort_order }}</td>
+      <td><div style="display:flex;gap:6px">
+        <a href="/admin/categories/{{ cat.id }}/edit" class="btn btn-secondary btn-sm">Ред.</a>
+        <form method="post" action="/admin/categories/{{ cat.id }}/delete" onsubmit="return confirm('Удалить?')" style="margin:0">
+          <button class="btn btn-danger btn-sm">Удалить</button>
+        </form>
+      </div></td>
+    </tr>
+    {% else %}<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">Категорий нет</td></tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+</div>
+{% endblock %}

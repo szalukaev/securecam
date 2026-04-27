@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding-top:40px;padding-bottom:80px;max-width:860px">
+  <div class="breadcrumbs"><a href="/">Главная</a> / <a href="/blog">Блог</a> / <span>{{ post.title }}</span></div>
+  {% if post.cover_image %}
+    <img src="{{ post.cover_image }}" alt="{{ post.title }}" style="width:100%;border-radius:var(--radius);margin:24px 0;max-height:400px;object-fit:cover">
+  {% endif %}
+  <div style="color:var(--text-muted);font-size:13px;margin-bottom:10px">{{ post.created_at.strftime('%d.%m.%Y') }}</div>
+  <h1 style="font-size:40px;margin-bottom:24px;line-height:1.15">{{ post.title }}</h1>
+  <div style="color:var(--text-dim);line-height:1.85;font-size:16px" class="blog-content">
+    {{ post.content | safe }}
+  </div>
+  <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
+    <a href="/blog" style="color:var(--accent)">← Все статьи</a>
+  </div>
+</div>
+<style>
+.blog-content h2{font-size:26px;margin:32px 0 12px;color:var(--text)}
+.blog-content h3{font-size:20px;margin:24px 0 10px;color:var(--text)}
+.blog-content p{margin-bottom:16px}
+.blog-content ul,.blog-content ol{margin:0 0 16px 24px;color:var(--text-dim)}
+.blog-content li{margin-bottom:6px}
+.blog-content img{border-radius:var(--radius);max-width:100%;margin:20px 0}
+.blog-content a{color:var(--accent)}
+.blog-content blockquote{border-left:3px solid var(--accent);padding:12px 20px;background:var(--bg-card);border-radius:0 var(--radius) var(--radius) 0;margin:20px 0;color:var(--text-dim)}
+</style>
+{% endblock %}

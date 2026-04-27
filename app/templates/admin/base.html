@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Админ{% endblock %} — {{ site_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <style>
+    :root{--bg:#080d11;--sidebar:#0d1420;--card:#111823;--border:rgba(0,229,255,0.12);--accent:#00e5ff;--text:#e8edf2;--muted:#7a8fa8;--red:#ff4d6d;--green:#00d68f}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;display:flex;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    h1,h2,h3,h4{font-family:'Rajdhani',sans-serif;font-weight:700}
+    /* Sidebar */
+    .sidebar{width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .sidebar-logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .sidebar-logo span{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700}
+    .sidebar-logo small{display:block;font-size:11px;color:var(--muted);font-family:'Inter',sans-serif}
+    .sidebar-nav{padding:16px 12px;flex:1}
+    .nav-group{margin-bottom:24px}
+    .nav-group-label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0 8px;margin-bottom:8px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:var(--muted);font-size:13px;transition:all 0.15s;margin-bottom:2px}
+    .nav-item:hover,.nav-item.active{background:rgba(0,229,255,0.08);color:var(--accent)}
+    .nav-item svg{flex-shrink:0}
+    .sidebar-bottom{padding:16px;border-top:1px solid var(--border)}
+    .sidebar-bottom a{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;padding:8px 10px;border-radius:6px}
+    .sidebar-bottom a:hover{color:var(--red);background:rgba(255,77,109,0.08)}
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;min-width:0}
+    .topbar{background:var(--sidebar);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+    .topbar h1{font-size:22px}
+    .content{padding:28px;flex:1}
+    /* Cards */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px}
+    .card-title{font-size:16px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+    /* Table */
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:10px 14px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border)}
+    td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+    tr:hover td{background:rgba(0,229,255,0.03)}
+    tr:last-child td{border-bottom:none}
+    /* Forms */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .fg{margin-bottom:16px}
+    .fg label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .fg input,.fg textarea,.fg select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+    .fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--accent)}
+    .fg textarea{resize:vertical;min-height:100px}
+    .fg-check{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;font-size:13px;color:var(--muted)}
+    .fg-check input{accent-color:var(--accent)}
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:'Inter',sans-serif}
+    .btn-primary{background:var(--accent);color:#000}
+    .btn-primary:hover{filter:brightness(1.1)}
+    .btn-danger{background:rgba(255,77,109,0.15);color:var(--red);border:1px solid rgba(255,77,109,0.3)}
+    .btn-danger:hover{background:var(--red);color:#fff}
+    .btn-secondary{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border)}
+    .btn-secondary:hover{color:var(--text)}
+    .btn-sm{padding:5px 12px;font-size:12px}
+    /* Badges */
+    .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-new{background:rgba(0,229,255,0.15);color:var(--accent)}
+    .badge-done{background:rgba(0,214,143,0.15);color:var(--green)}
+    .badge-cancelled{background:rgba(255,77,109,0.12);color:var(--red)}
+    .badge-processing{background:rgba(255,200,0,0.12);color:#ffc800}
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+    .stat-val{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:var(--accent);line-height:1}
+    .stat-lbl{font-size:12px;color:var(--muted);margin-top:4px}
+    .stat-new{border-color:rgba(255,77,109,0.3)}
+    .stat-new .stat-val{color:var(--red)}
+    /* Alert */
+    .alert{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:13px}
+    .alert-success{background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.3);color:var(--green)}
+    .alert-err{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red)}
+    /* Img preview */
+    .img-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .img-preview img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+    @media(max-width:768px){.sidebar{display:none}.form-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="rgba(0,229,255,0.12)"/><path d="M6 10 L16 6 L26 10 L26 18 Q16 26 16 26 Q16 26 6 18 Z" stroke="#00e5ff" stroke-width="1.5" fill="none"/><circle cx="16" cy="15" r="3.5" stroke="#00e5ff" stroke-width="1.5" fill="none"/></svg>
+    <div><span>Админ</span><small>{{ site_name }}</small></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Обзор</div>
+      <a href="/admin/" class="nav-item {% if request.url.path == '/admin/' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Дашборд
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Каталог</div>
+      <a href="/admin/brands" class="nav-item {% if 'brands' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Бренды
+      </a>
+      <a href="/admin/categories" class="nav-item {% if 'categories' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Категории
+      </a>
+      <a href="/admin/products" class="nav-item {% if 'products' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Товары
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Контент</div>
+      <a href="/admin/services" class="nav-item {% if 'services' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Услуги
+      </a>
+      <a href="/admin/blog" class="nav-item {% if 'blog' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Блог
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Продажи</div>
+      <a href="/admin/orders" class="nav-item {% if 'orders' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Заказы
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Инструменты</div>
+      <a href="/admin/import" class="nav-item {% if 'import' in request.url.path %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Импорт Excel
+      </a>
+      <form action="/admin/run-parser" method="post" style="margin:0">
+        <button type="submit" class="nav-item" style="width:100%;cursor:pointer;background:none;border:none;text-align:left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Запустить парсинг
+        </button>
+      </form>
+      <a href="/" target="_blank" class="nav-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Открыть сайт
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <a href="/admin/logout">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Выйти
+    </a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>{% block page_title %}{% endblock %}</h1>
+    <div style="display:flex;align-items:center;gap:12px">
+      {% block topbar_actions %}{% endblock %}
+    </div>
+  </div>
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+</body>
+</html>

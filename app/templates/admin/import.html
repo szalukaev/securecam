@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% block title %}Импорт товаров{% endblock %}
+{% block page_title %}Импорт товаров из Excel{% endblock %}
+{% block content %}
+{% if error %}
+<div class="alert alert-err">{{ error }}</div>
+{% endif %}
+<div class="card" style="max-width:600px">
+  <div class="card-title">Загрузить файл Excel (.xlsx)</div>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
+    Файл должен содержать колонки: <strong>Название</strong>, <strong>Краткое описание</strong>,
+    <strong>Цена</strong>, <strong>Категория</strong>, <strong>Бренд</strong>.<br>
+    Регистр не важен. Первая строка — заголовки.
+  </p>
+  <form method="post" action="/admin/import/preview" enctype="multipart/form-data">
+    <div class="fg"><label>Файл Excel (.xlsx)</label>
+      <input type="file" name="file" accept=".xlsx,.xls" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Загрузить и проверить →</button>
+  </form>
+</div>
+{% endblock %}

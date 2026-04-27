@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Бренды{% endblock %}
+{% block page_title %}Справочник брендов{% endblock %}
+{% block topbar_actions %}<a href="/admin/brands/new" class="btn btn-primary">+ Добавить бренд</a>{% endblock %}
+{% block content %}
+<div class="card" style="padding:0"><div class="table-wrap"><table>
+  <thead><tr><th>Лого</th><th>Название</th><th>Официальный дилер</th><th>В футере</th><th>В каталоге</th><th>Товаров</th><th>Действия</th></tr></thead>
+  <tbody>
+    {% for b in brands %}
+    <tr>
+      <td>{% if b.logo_url %}<img src="{{ b.logo_url }}" style="height:32px;max-width:80px;object-fit:contain">{% else %}—{% endif %}</td>
+      <td><strong>{{ b.name }}</strong>{% if b.website %}<br><a href="{{ b.website }}" target="_blank" style="color:var(--muted);font-size:12px">{{ b.website[:40] }}</a>{% endif %}</td>
+      <td>{% if b.is_official_dealer %}<span style="color:var(--green)">✓ Дилер</span>{% else %}—{% endif %}</td>
+      <td>{% if b.show_in_footer %}<span style="color:var(--accent)">✓</span>{% else %}—{% endif %}</td>
+      <td>{% if b.show_in_catalog %}<span style="color:var(--green)">✓</span>{% else %}<span style="color:var(--red)">✗</span>{% endif %}</td>
+      <td style="color:var(--muted)">{{ brand_counts.get(b.id, 0) }}</td>
+      <td><div style="display:flex;gap:6px">
+        <a href="/admin/brands/{{ b.id }}/edit" class="btn btn-secondary btn-sm">Ред.</a>
+        <form method="post" action="/admin/brands/{{ b.id }}/delete" onsubmit="return confirm('Удалить бренд?')" style="margin:0">
+          <button class="btn btn-danger btn-sm">Удалить</button>
+        </form>
+      </div></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">Брендов нет. <a href="/admin/brands/new" style="color:var(--accent)">Добавить первый</a></td></tr>
+    {% endfor %}
+  </tbody>
+</table></div></div>
+{% endblock %}

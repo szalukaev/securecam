@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding-top:32px;padding-bottom:80px">
+  <h1 style="font-size:32px;margin-bottom:32px">Сравнение товаров</h1>
+  <div class="empty-page" id="cmp-empty" style="display:none">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <p>Нет товаров для сравнения</p>
+    <a href="/catalog" class="btn-primary" style="display:inline-flex;margin-top:16px">Перейти в каталог</a>
+  </div>
+  <div id="cmp-content"></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  compareStore.load();
+  const content = document.getElementById('cmp-content');
+  const empty = document.getElementById('cmp-empty');
+  if (!compareStore.items.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  const items = compareStore.items;
+  let html = '<div style="overflow-x:auto"><table class="compare-table">';
+  html += '<thead><tr><th style="min-width:140px">Характеристика</th>';
+  items.forEach(p => {
+    html += `<th style="min-width:200px">
+      <div style="margin-bottom:8px">${p.image ? `<img src="${p.image}" style="width:80px;height:60px;object-fit:contain">` : ''}</div>
+      <a href="/catalog/${p.slug||'#'}" style="color:var(--accent);font-size:14px">${p.name}</a>
+      <button onclick="compareStore.toggle({id:${p.id},name:'${p.name.replace(/'/g,"\\'")}',price:${p.price}});location.reload()" style="display:block;margin-top:6px;font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer">✕ Убрать</button>
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+  html += '<tr><td>Цена</td>';
+  items.forEach(p => { html += `<td><strong style="color:var(--accent);font-size:18px">${formatPrice(p.price)} ₽</strong></td>`; });
+  html += '</tr>';
+  html += '<tr><td>Артикул</td>';
+  items.forEach(p => { html += `<td>${p.sku||'—'}</td>`; });
+  html += '</tr>';
+  html += '<tr><td>Бренд</td>';
+  items.forEach(p => { html += `<td>${p.brand||'—'}</td>`; });
+  html += '</tr>';
+  html += '</tbody></table></div>';
+  html += `<div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap">`;
+  items.forEach(p => {
+    html += `<button class="btn-primary" onclick="document.body._x_dataStack[0].cart.add({id:${p.id},name:'${p.name.replace(/'/g,"\\'")}',sku:'${p.sku||''}',price:${p.price}})">В корзину: ${p.name.slice(0,20)}</button>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+});
+</script>
+{% endblock %}

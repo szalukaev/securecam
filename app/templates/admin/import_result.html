@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% block title %}Результат импорта{% endblock %}
+{% block page_title %}Импорт завершён{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px;text-align:center;padding:40px">
+  <div style="font-size:48px;margin-bottom:16px">{% if errors == 0 %}✅{% else %}⚠️{% endif %}</div>
+  <div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:24px">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green)">{{ created }}</div>
+      <div class="stat-lbl">Создано</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent)">{{ updated }}</div>
+      <div class="stat-lbl">Обновлено</div>
+    </div>
+    <div class="stat-card {% if errors %}stat-new{% endif %}">
+      <div class="stat-val">{{ errors }}</div>
+      <div class="stat-lbl">Ошибок</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center">
+    <a href="/admin/products" class="btn btn-primary">Перейти к товарам</a>
+    <a href="/admin/import" class="btn btn-secondary">Ещё импорт</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "admin/base.html" %}
+{% block title %}{% if post %}Редактировать{% else %}Новая статья{% endif %}{% endblock %}
+{% block page_title %}{% if post %}Редактировать: {{ post.title }}{% else %}Новая статья{% endif %}{% endblock %}
+{% block topbar_actions %}<a href="/admin/blog" class="btn btn-secondary">← Назад</a>{% endblock %}
+{% block content %}
+<style>
+.tox-tinymce{border-color:rgba(0,229,255,0.15)!important;border-radius:0 0 6px 6px!important}
+.tox-toolbar-overlord,.tox-toolbar__primary{background:#1a2535!important}
+.tox-edit-area{background:#080d11!important}
+.tox .tox-edit-area__iframe{background:#080d11!important}
+</style>
+<form method="post" enctype="multipart/form-data" id="pform" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
+  <div>
+    <div class="card">
+      <div class="fg">
+        <label>Заголовок *</label>
+        <input type="text" name="title" value="{{ post.title if post else '' }}" required placeholder="Заголовок статьи">
+      </div>
+      <div class="fg">
+        <label>Краткое описание (показывается в карточке)</label>
+        <textarea name="excerpt" rows="2" placeholder="2-3 предложения...">{{ post.excerpt if post else '' }}</textarea>
+      </div>
+      <div class="fg">
+        <label>Текст статьи</label>
+        <textarea name="content" id="content-editor" style="display:none">{{ post.content|safe if post and post.content else '' }}</textarea>
+        <div id="editor-fallback" style="display:none">
+          <div id="art-editor" contenteditable="true" style="background:#080d11;border:1px solid rgba(0,229,255,0.15);border-radius:6px;padding:12px;min-height:400px;color:#e8edf2;outline:none">{{ post.content|safe if post and post.content else '' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">SEO</div>
+      <div class="fg"><label>SEO заголовок (до 70 символов)</label>
+        <input type="text" name="seo_title" value="{{ post.seo_title if post else '' }}" maxlength="70" placeholder="Автогенерация если пусто">
+      </div>
+      <div class="fg"><label>SEO описание (до 160 символов)</label>
+        <textarea name="seo_description" rows="2" maxlength="160" placeholder="Автогенерация если пусто">{{ post.seo_description if post else '' }}</textarea>
+      </div>
+      <div class="fg"><label>Ключевые слова</label>
+        <input type="text" name="seo_keywords" value="{{ post.seo_keywords if post else '' }}" placeholder="видеонаблюдение, камеры, Екатеринбург">
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="fg"><label>Обложка статьи</label>
+        <input type="file" name="cover" accept="image/*">
+        {% if post and post.cover_image %}
+        <img src="{{ post.cover_image }}" style="margin-top:8px;width:100%;border-radius:6px;max-height:120px;object-fit:cover">
+        {% endif %}
+      </div>
+      <label class="fg-check" style="margin-top:8px">
+        <input type="checkbox" name="is_published" value="true" {{ 'checked' if post and post.is_published }}>
+        Опубликовать
+      </label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+        {{ 'Сохранить' if post else 'Создать статью' }}
+      </button>
+      <a href="/admin/blog" class="btn btn-secondary" style="width:100%;justify-content:center">Отмена</a>
+    </div>
+  </div>
+</form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
+<script>
+var tinyLoaded = false;
+
+function initTinyMCE() {
+  tinymce.init({
+    selector: '#content-editor',
+    language_url: false,
+    plugins: 'table lists link image media code autoresize wordcount',
+    toolbar: 'undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist | table | link image media | code | removeformat',
+    menubar: 'file edit view insert format table',
+    skin: 'oxide-dark',
+    content_css: 'dark',
+    height: 500,
+    autoresize_min_height: 400,
+    autoresize_max_height: 800,
+    table_appearance_options: false,
+    table_default_styles: {
+      'border-collapse': 'collapse',
+      'width': '100%'
+    },
+    content_style: `
+      body { background: #080d11; color: #e8edf2; font-family: Inter, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px 16px; }
+      table { border-collapse: collapse; width: 100%; }
+      table td, table th { border: 1px solid rgba(0,229,255,0.3); padding: 8px 12px; }
+      table th { background: rgba(0,229,255,0.1); }
+      a { color: #00e5ff; }
+      blockquote { border-left: 3px solid #00e5ff; padding: 8px 16px; background: rgba(0,229,255,0.05); margin: 8px 0; }
+    `,
+    // Загрузка картинок через существующий upload endpoint
+    images_upload_handler: function(blobInfo, progress) {
+      return new Promise(function(resolve, reject) {
+        var formData = new FormData();
+        formData.append('file', blobInfo.blob(), blobInfo.filename());
+        fetch('/admin/upload-image', {
+          method: 'POST',
+          body: formData
+        }).then(function(r) {
+          return r.json();
+        }).then(function(data) {
+          if (data.url) resolve(data.url);
+          else reject('Ошибка загрузки: ' + (data.error || 'неизвестная'));
+        }).catch(function(e) {
+          reject('Ошибка сети: ' + e);
+        });
+      });
+    },
+    setup: function(editor) {
+      tinyLoaded = true;
+      document.getElementById('content-editor').style.display = 'block';
+    }
+  });
+}
+
+// Пробуем загрузить TinyMCE, при неудаче — fallback редактор
+try {
+  if (typeof tinymce !== 'undefined') {
+    initTinyMCE();
+  } else {
+    throw new Error('not loaded');
+  }
+} catch(e) {
+  showFallbackEditor();
+}
+
+window.addEventListener('load', function() {
+  if (!tinyLoaded) {
+    if (typeof tinymce !== 'undefined') {
+      initTinyMCE();
+    } else {
+      showFallbackEditor();
+    }
+  }
+});
+
+function showFallbackEditor() {
+  document.getElementById('editor-fallback').style.display = 'block';
+  document.getElementById('content-editor').style.display = 'none';
+}
+
+document.getElementById('pform').addEventListener('submit', function() {
+  if (typeof tinymce !== 'undefined' && tinymce.get('content-editor')) {
+    document.getElementById('content-editor').value = tinymce.get('content-editor').getContent();
+  } else {
+    var fb = document.getElementById('art-editor');
+    if (fb) document.getElementById('content-editor').value = fb.innerHTML;
+  }
+});
+</script>
+{% endblock %}

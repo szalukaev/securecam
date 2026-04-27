@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding-top:40px;padding-bottom:80px">
+  <div class="breadcrumbs"><a href="/">Главная</a> / <span>Контакты</span></div>
+  <h1 class="section-title" style="margin-bottom:40px"><span>Контакты</span></h1>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+    <div>
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Телефон</div>
+          <a href="tel:{{ site_phone|replace(' ','') }}" style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">{{ site_phone }}</a>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Пн–Пт: 9:00–18:00, Сб: 10:00–15:00</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Email</div>
+          <a href="mailto:{{ site_email }}" style="color:var(--accent);font-size:18px">{{ site_email }}</a>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Адрес</div>
+          <p style="font-size:16px">{{ site_address }}</p>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px" x-data="{name:'',phone:'',msg:'',done:false,loading:false}">
+      <h2 style="font-size:26px;margin-bottom:24px">Написать нам</h2>
+      <template x-if="!done">
+        <form @submit.prevent="loading=true; fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_name:name,customer_phone:phone,comment:msg,items:[]})}).then(r=>r.json()).then(()=>{done=true;loading=false})">
+          <div class="form-group"><label>Имя</label><input type="text" x-model="name" required placeholder="Иван"></div>
+          <div class="form-group"><label>Телефон</label><input type="tel" x-model="phone" required placeholder="+7 (343) 000-00-00"></div>
+          <div class="form-group"><label>Сообщение</label><textarea x-model="msg" rows="4" placeholder="Ваш вопрос..."></textarea></div>
+          <button type="submit" class="btn-primary btn-block" :disabled="loading">
+            <span x-show="!loading">Отправить</span><span x-show="loading">Отправляем...</span>
+          </button>
+        </form>
+      </template>
+      <template x-if="done">
+        <div style="text-align:center;padding:40px 0;color:var(--text-dim)">
+          <div style="font-size:48px;margin-bottom:12px">✓</div>
+          <p style="font-size:18px;color:var(--text)">Сообщение отправлено!</p>
+          <p>Мы перезвоним вам в ближайшее время.</p>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+{% endblock %}

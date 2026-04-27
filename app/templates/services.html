@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="breadcrumbs"><a href="/">Главная</a> / <span>Услуги</span></div>
+  <h1 class="section-title" style="margin-bottom:40px">Наши <span>услуги</span></h1>
+  <div class="services-grid">
+    {% for svc in services %}
+    <a href="/services/{{ svc.slug }}" class="service-card">
+      <div class="service-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3 class="service-name">{{ svc.name }}</h3>
+      <p class="service-desc">{{ svc.short_description }}</p>
+      {% if svc.price_from %}<p class="service-price">от {{ "{:,.0f}".format(svc.price_from) }} ₽</p>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

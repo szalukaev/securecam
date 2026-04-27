@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px">
+  <div>
+    <div style="font-family:'Rajdhani',sans-serif;font-size:120px;font-weight:700;color:var(--accent);line-height:1;opacity:0.3">404</div>
+    <h1 style="font-size:32px;margin-bottom:12px">Страница не найдена</h1>
+    <p style="color:var(--text-muted);margin-bottom:32px">Возможно, она была удалена или вы перешли по неверной ссылке.</p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <a href="/" class="btn-primary">На главную</a>
+      <a href="/catalog" class="btn-outline">Каталог</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать категорию' if cat else 'Новая категория' }}{% endblock %}
+{% block page_title %}{{ 'Редактировать: ' + cat.name if cat else 'Новая категория' }}{% endblock %}
+{% block topbar_actions %}<a href="/admin/categories" class="btn btn-secondary">← Назад</a>{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" style="max-width:700px">
+  <div class="card">
+    <div class="fg"><label>Название *</label><input type="text" name="name" value="{{ cat.name if cat else '' }}" required></div>
+    <div class="fg">
+      <label>Родительская категория</label>
+      <select name="parent_id">
+        <option value="">— Нет (корневая) —</option>
+        {% for p in parents %}<option value="{{ p.id }}" {{ 'selected' if cat and cat.parent_id == p.id }}>{{ p.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="fg"><label>Описание</label><textarea name="description" rows="3">{{ cat.description if cat else '' }}</textarea></div>
+    <div class="fg"><label>Изображение категории</label><input type="file" name="image" accept="image/*">{% if cat and cat.image_url %}<img src="{{ cat.image_url }}" style="margin-top:8px;width:80px;height:60px;object-fit:cover;border-radius:4px">{% endif %}</div>
+    <div class="form-row">
+      <div class="fg"><label>SEO заголовок</label><input type="text" name="seo_title" value="{{ cat.seo_title if cat else '' }}" maxlength="70"></div>
+      <div class="fg"><label>Порядок сортировки</label><input type="number" name="sort_order" value="{{ cat.sort_order if cat else '0' }}"></div>
+    </div>
+    <div class="fg"><label>SEO описание</label><textarea name="seo_description" rows="2" maxlength="160">{{ cat.seo_description if cat else '' }}</textarea></div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button type="submit" class="btn btn-primary">{{ 'Сохранить' if cat else 'Создать' }}</button>
+    <a href="/admin/categories" class="btn btn-secondary">Отмена</a>
+  </div>
+</form>
+{% endblock %}
