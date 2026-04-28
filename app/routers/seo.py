@@ -25,9 +25,17 @@ async def robots():
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /static/
 
+Sitemap: {settings.SITE_DOMAIN}/sitemap.xml
 Sitemap: {settings.SITE_DOMAIN}/sitemap.xml
 
 Host: {settings.SITE_DOMAIN.replace('https://', '').replace('http://', '')}
+
+User-agent: Yandex
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
 """
     return Response(content=content, media_type="text/plain")
