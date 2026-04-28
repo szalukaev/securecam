@@ -233,6 +233,58 @@ async def category_delete(cat_id: int, request: Request, db: AsyncSession = Depe
     return RedirectResponse("/admin/categories", status_code=302)
 
 
+# ─── Products Tree ────────────────────────────────────
+
+@router.get("/products/tree", response_class=HTMLResponse)
+async def products_tree(request: Request, db: AsyncSession = Depends(get_db)):
+    require_admin(request)
+    root_cats = (await db.execute(select(Category).where(Category.parent_id == None).order_by(Category.sort_order, Category.name))).scalars().all()
+    cat_counts = {}
+    for cat in root_cats:
+        direct = (await db.execute(select(func.count(Product.id)).where(Product.category_id == cat.id))).scalar() or 0
+        subcats = (await db.execute(select(Category).where(Category.parent_id == cat.id))).scalars().all()
+        sub_total = sum([(await db.execute(select(func.count(Product.id)).where(Product.category_id == s.id))).scalar() or 0 for s in subcats])
+        cat_counts[cat.id] = {"direct": direct, "total": direct + sub_total}
+    no_cat_count = (await db.execute(select(func.count(Product.id)).where(Product.category_id == None))).scalar() or 0
+    ctx = admin_ctx(request)
+    ctx.update({"root_cats": root_cats, "cat_counts": cat_counts, "no_cat_count": no_cat_count})
+    return templates.TemplateResponse("admin/products_tree.html", ctx)
+
+
+@router.get("/products/category/{cat_id}", response_class=HTMLResponse)
+async def products_in_category(cat_id: int, request: Request, page: int = Query(1, ge=1), db: AsyncSession = Depends(get_db)):
+    require_admin(request)
+    cat = (await db.execute(select(Category).where(Category.id == cat_id))).scalar_one_or_none()
+    if not cat: raise HTTPException(404)
+    breadcrumb = [cat]
+    if cat.parent_id:
+        parent = (await db.execute(select(Category).where(Category.id == cat.parent_id))).scalar_one_or_none()
+        if parent: breadcrumb.insert(0, parent)
+    subcats = (await db.execute(select(Category).where(Category.parent_id == cat_id).order_by(Category.sort_order, Category.name))).scalars().all()
+    sub_counts = {}
+    for sub in subcats:
+        sub_counts[sub.id] = (await db.execute(select(func.count(Product.id)).where(Product.category_id == sub.id))).scalar() or 0
+    per_page = 30
+    offset = (page - 1) * per_page
+    products = (await db.execute(select(Product).where(Product.category_id == cat_id).order_by(Product.sort_order, Product.id.desc()).offset(offset).limit(per_page))).scalars().all()
+    total = (await db.execute(select(func.count(Product.id)).where(Product.category_id == cat_id))).scalar() or 0
+    ctx = admin_ctx(request)
+    ctx.update({"cat": cat, "breadcrumb": breadcrumb, "subcats": subcats, "sub_counts": sub_counts, "products": products, "total": total, "page": page, "pages": (total + per_page - 1) // per_page})
+    return templates.TemplateResponse("admin/products_category.html", ctx)
+
+
+@router.get("/products/no-category", response_class=HTMLResponse)
+async def products_no_category(request: Request, page: int = Query(1, ge=1), db: AsyncSession = Depends(get_db)):
+    require_admin(request)
+    per_page = 30
+    offset = (page - 1) * per_page
+    products = (await db.execute(select(Product).where(Product.category_id == None).order_by(Product.id.desc()).offset(offset).limit(per_page))).scalars().all()
+    total = (await db.execute(select(func.count(Product.id)).where(Product.category_id == None))).scalar() or 0
+    ctx = admin_ctx(request)
+    ctx.update({"products": products, "total": total, "page": page, "pages": (total + per_page - 1) // per_page})
+    return templates.TemplateResponse("admin/products_no_category.html", ctx)
+
+
 # ─── Products ──────────────────────────────────────────────
 
 @router.get("/products", response_class=HTMLResponse)

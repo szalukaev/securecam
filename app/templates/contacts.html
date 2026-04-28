@@ -26,7 +26,7 @@
       <template x-if="!done">
         <form @submit.prevent="loading=true; fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_name:name,customer_phone:phone,comment:msg,items:[]})}).then(r=>r.json()).then(()=>{done=true;loading=false})">
           <div class="form-group"><label>Имя</label><input type="text" x-model="name" required placeholder="Иван"></div>
-          <div class="form-group"><label>Телефон</label><input type="tel" x-model="phone" required placeholder="+7 (343) 000-00-00"></div>
+          <div class="form-group"><label>Телефон</label><input type="tel" x-model="phone" required placeholder="+7 (965) 505-84-68"></div>
           <div class="form-group"><label>Сообщение</label><textarea x-model="msg" rows="4" placeholder="Ваш вопрос..."></textarea></div>
           <button type="submit" class="btn-primary btn-block" :disabled="loading">
             <span x-show="!loading">Отправить</span><span x-show="loading">Отправляем...</span>

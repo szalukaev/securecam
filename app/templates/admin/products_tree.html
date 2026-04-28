@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}Каталог товаров{% endblock %}
+{% block page_title %}Каталог товаров{% endblock %}
+{% block topbar_actions %}
+  <a href="/admin/products/new" class="btn btn-primary">+ Добавить товар</a>
+  <a href="/admin/products" class="btn btn-secondary" style="margin-left:6px">Все списком</a>
+{% endblock %}
+{% block content %}
+<div class="card" style="padding:0">
+  {% for cat in root_cats %}
+  <a href="/admin/products/category/{{ cat.id }}" class="tree-folder">
+    <div class="tree-folder-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="tree-folder-info">
+      <div class="tree-folder-name">{{ cat.name }}</div>
+      <div class="tree-folder-meta">{{ cat_counts[cat.id].total }} товаров</div>
+    </div>
+    <div class="tree-folder-arrow">›</div>
+  </a>
+  {% else %}
+  <div style="text-align:center;padding:40px;color:var(--muted)">Категорий нет. <a href="/admin/categories/new" style="color:var(--accent)">Создать первую</a></div>
+  {% endfor %}
+  {% if no_cat_count > 0 %}
+  <a href="/admin/products/no-category" class="tree-folder">
+    <div class="tree-folder-icon" style="background:rgba(255,200,0,0.1);border-color:rgba(255,200,0,0.2);color:#ffc800">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="tree-folder-info">
+      <div class="tree-folder-name" style="color:#ffc800">Без категории</div>
+      <div class="tree-folder-meta">{{ no_cat_count }} товаров — нужно распределить</div>
+    </div>
+    <div class="tree-folder-arrow">›</div>
+  </a>
+  {% endif %}
+</div>
+<style>
+.tree-folder{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);color:var(--text);text-decoration:none;transition:background 0.15s}
+.tree-folder:last-child{border-bottom:none}
+.tree-folder:hover{background:rgba(0,229,255,0.04)}
+.tree-folder-icon{width:40px;height:40px;flex-shrink:0;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.tree-folder-info{flex:1}
+.tree-folder-name{font-weight:600;font-size:15px}
+.tree-folder-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.tree-folder-arrow{font-size:20px;color:var(--muted)}
+.tree-folder:hover .tree-folder-arrow{color:var(--accent)}
+</style>
+{% endblock %}

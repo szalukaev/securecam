@@ -5,7 +5,7 @@ import os
 
 class Settings(BaseSettings):
     # DB
-    DATABASE_URL: str = "postgresql+asyncpg://securecam_user:password@127.0.0.1:5432/securecam_db"
+    DATABASE_URL: str = "postgresql+asyncpg://rocketplan:rocketplan123@127.0.0.1:5432/securecam"
 
     # Security
     SECRET_KEY: str = "change_me"
@@ -23,11 +23,11 @@ class Settings(BaseSettings):
     ORDER_EMAIL: str = ""
 
     # Site info
-    SITE_NAME: str = "СекьюрКам Екатеринбург"
-    SITE_DOMAIN: str = "https://securecam-ekb.ru"
-    SITE_PHONE: str = "+7 (343) 000-00-00"
+    SITE_NAME: str = "Видеонаблюдение Екатеринбург"
+    SITE_DOMAIN: str = "https://видеонаблюдениеекатеринбург.рф"
+    SITE_PHONE: str = "+7 (965) 505-84-68"
     SITE_ADDRESS: str = "г. Екатеринбург"
-    SITE_EMAIL: str = "info@securecam-ekb.ru"
+    SITE_EMAIL: str = "video-system@internet.ru"
     SITE_DESCRIPTION: str = "Продажа и установка систем видеонаблюдения в Екатеринбурге"
     SITE_KEYWORDS: str = "видеонаблюдение Екатеринбург, камеры видеонаблюдения"
 

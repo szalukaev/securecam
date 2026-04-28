@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ cat.name }}{% endblock %}
+{% block page_title %}{{ cat.name }}{% endblock %}
+{% block topbar_actions %}<a href="/admin/products/new" class="btn btn-primary">+ Добавить товар</a>{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--muted)">
+  <a href="/admin/products/tree" style="color:var(--accent)">Каталог</a>
+  {% for crumb in breadcrumb %}<span>›</span>{% if not loop.last %}<a href="/admin/products/category/{{ crumb.id }}" style="color:var(--accent)">{{ crumb.name }}</a>{% else %}<span style="color:var(--text)">{{ crumb.name }}</span>{% endif %}{% endfor %}
+</div>
+{% if subcats %}
+<div class="card" style="padding:0;margin-bottom:20px">
+  {% for sub in subcats %}
+  <a href="/admin/products/category/{{ sub.id }}" class="tree-folder">
+    <div class="tree-folder-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+    <div class="tree-folder-info"><div class="tree-folder-name">{{ sub.name }}</div><div class="tree-folder-meta">{{ sub_counts[sub.id] }} товаров</div></div>
+    <div class="tree-folder-arrow">›</div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="card" style="padding:0">
+  {% if products %}
+  <div style="padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)">Товаров: <strong style="color:var(--text)">{{ total }}</strong></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Фото</th><th>Название</th><th>Арт.</th><th>Бренд</th><th>Цена</th><th>Акт.</th><th>Действия</th></tr></thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>{% if p.images %}<img src="{{ p.images[0] }}" style="width:44px;height:44px;object-fit:contain;border-radius:4px;background:#0a0f14">{% else %}<div style="width:44px;height:44px;background:var(--bg);border-radius:4px"></div>{% endif %}</td>
+        <td><a href="/catalog/{{ p.slug }}" target="_blank" style="color:var(--text)">{{ p.name[:55] }}{% if p.name|length > 55 %}...{% endif %}</a></td>
+        <td style="color:var(--muted)">{{ p.sku or '—' }}</td>
+        <td>{{ p.brand or '—' }}</td>
+        <td style="color:var(--accent);font-weight:600">{{ "{:,.0f}".format(p.price) }} ₽</td>
+        <td>{% if p.is_active %}<span style="color:var(--green)">✓</span>{% else %}<span style="color:var(--red)">✗</span>{% endif %}</td>
+        <td><div style="display:flex;gap:6px">
+          <a href="/admin/products/{{ p.id }}/edit" class="btn btn-secondary btn-sm">Ред.</a>
+          <form method="post" action="/admin/products/{{ p.id }}/delete" onsubmit="return confirm('Удалить?')" style="margin:0"><button class="btn btn-danger btn-sm">Удалить</button></form>
+        </div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% if pages > 1 %}
+  <div style="display:flex;gap:6px;padding:16px 20px;border-top:1px solid var(--border)">
+    {% for p in range(1, pages+1) %}<a href="?page={{ p }}" class="btn btn-secondary btn-sm {% if p==page %}btn-primary{% endif %}">{{ p }}</a>{% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div style="text-align:center;padding:40px;color:var(--muted)">В этой категории нет товаров. <a href="/admin/products/new" style="color:var(--accent)">Добавить</a></div>
+  {% endif %}
+</div>
+<style>
+.tree-folder{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);color:var(--text);text-decoration:none;transition:background 0.15s}
+.tree-folder:last-child{border-bottom:none}
+.tree-folder:hover{background:rgba(0,229,255,0.04)}
+.tree-folder-icon{width:36px;height:36px;flex-shrink:0;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.tree-folder-info{flex:1}
+.tree-folder-name{font-weight:600;font-size:14px}
+.tree-folder-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.tree-folder-arrow{font-size:18px;color:var(--muted)}
+.tree-folder:hover .tree-folder-arrow{color:var(--accent)}
+</style>
+{% endblock %}
