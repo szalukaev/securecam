@@ -54,8 +54,8 @@
         {% if p.sku %}<div class="product-sku">Арт.: {{ p.sku }}</div>{% endif %}
         <div class="product-price-row">
           <div>
-            <div class="product-price">{{ "{:,.0f}".format(p.price) }} ₽</div>
-            {% if p.old_price > p.price and p.old_price > 0 %}<div class="product-old-price">{{ "{:,.0f}".format(p.old_price) }} ₽</div>{% endif %}
+            <div class="product-price">{{ ("{:,.0f}".format(p.price)).replace(",", " ") }} ₽</div>
+            {% if p.old_price > p.price and p.old_price > 0 %}<div class="product-old-price">{{ ("{:,.0f}".format(p.old_price)).replace(",", " ") }} ₽</div>{% endif %}
           </div>
           <button class="product-add-btn"
             @click="cart.add({ id: {{ p.id }}, name: '{{ p.name|replace("'","\\'")|replace('"','\\"') }}', sku: '{{ p.sku }}', price: {{ p.price }} })">

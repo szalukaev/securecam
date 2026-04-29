@@ -3,35 +3,81 @@
 {% block page_title %}{{ 'Редактировать: ' + product.name if product else 'Добавить товар' }}{% endblock %}
 {% block topbar_actions %}<a href="/admin/products" class="btn btn-secondary">← Назад</a>{% endblock %}
 {% block content %}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 <style>
-.rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;background:#1a2535;border:1px solid rgba(0,229,255,0.15);border-bottom:none;border-radius:6px 6px 0 0;padding:8px}
-.rich-toolbar button{padding:4px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#7a8fa8;cursor:pointer;font-size:12px;transition:all 0.15s}
-.rich-toolbar button:hover,.rich-toolbar button.active{background:rgba(0,229,255,0.15);border-color:rgba(0,229,255,0.3);color:#00e5ff}
-.rich-toolbar .sep{width:1px;background:rgba(255,255,255,0.1);margin:0 4px}
-.rich-editor{background:#080d11;border:1px solid rgba(0,229,255,0.15);border-radius:0 0 6px 6px;padding:12px 16px;min-height:200px;color:#e8edf2;font-size:14px;line-height:1.7;outline:none}
-.rich-editor:focus{border-color:rgba(0,229,255,0.35)}
-.rich-editor h2{font-size:20px;margin:12px 0 8px}
-.rich-editor h3{font-size:17px;margin:10px 0 6px}
-.rich-editor ul,.rich-editor ol{margin:8px 0 8px 20px}
-.rich-editor li{margin-bottom:4px}
-.rich-editor table{border-collapse:collapse;width:100%;margin:12px 0}
-.rich-editor table td,.rich-editor table th{border:1px solid rgba(0,229,255,0.2);padding:8px 12px;min-width:60px}
-.rich-editor table th{background:rgba(0,229,255,0.08);font-weight:600}
-.rich-editor blockquote{border-left:3px solid #00e5ff;padding:8px 16px;background:rgba(0,229,255,0.05);margin:8px 0;border-radius:0 4px 4px 0}
-.rich-editor a{color:#00e5ff}
-.rich-editor p{margin-bottom:8px}
+/* Quill тема под наш дизайн */
+.ql-toolbar { background: #1a2535 !important; border-color: rgba(0,229,255,0.15) !important; border-radius: 6px 6px 0 0; }
+.ql-container { background: #080d11 !important; border-color: rgba(0,229,255,0.15) !important; border-radius: 0 0 6px 6px; }
+.ql-editor { color: #e8edf2 !important; font-size: 14px; line-height: 1.7; min-height: 200px; }
+.ql-editor.ql-blank::before { color: #4a5f75 !important; font-style: normal !important; }
+.ql-picker, .ql-picker-label { color: #7a8fa8 !important; }
+.ql-picker-options { background: #1a2535 !important; border-color: rgba(0,229,255,0.15) !important; }
+.ql-stroke { stroke: #7a8fa8 !important; }
+.ql-fill { fill: #7a8fa8 !important; }
+.ql-picker-item:hover, .ql-picker-label:hover { color: #00e5ff !important; }
+.ql-active .ql-stroke { stroke: #00e5ff !important; }
+.ql-active .ql-fill { fill: #00e5ff !important; }
+/* Короткий редактор */
+#short-quill .ql-editor { min-height: 100px; }
+
+/* Секция фото */
+.photo-section {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px; margin-top: 8px;
+}
+.photo-section-title {
+  font-size: 12px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 10px; font-weight: 600;
+}
+.main-photo-preview {
+  position: relative; display: inline-block;
+}
+.main-photo-preview img {
+  width: 120px; height: 120px; object-fit: contain;
+  border-radius: 6px; border: 2px solid var(--accent);
+  background: #0a0f14; padding: 4px;
+}
+.main-photo-badge {
+  position: absolute; top: -8px; left: -8px;
+  background: var(--accent); color: #000;
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; text-transform: uppercase;
+}
+.extra-photos-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+}
+.extra-photo-item {
+  position: relative;
+}
+.extra-photo-item img {
+  width: 72px; height: 72px; object-fit: contain;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: #0a0f14; padding: 3px;
+}
+.del-photo-btn {
+  position: absolute; top: 3px; right: 3px;
+  background: rgba(255,77,109,0.9); border-radius: 50%;
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 10px; color: white; border: none;
+}
+.del-photo-btn input { display: none; }
 </style>
 
 <form method="post" enctype="multipart/form-data" id="pform">
   <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
     <div>
+
+      <!-- ОСНОВНОЕ -->
       <div class="card">
         <div class="card-title">Основное</div>
-        <div class="fg"><label>Название *</label>
+        <div class="fg">
+          <label>Название *</label>
           <input type="text" name="name" value="{{ product.name if product else '' }}" required>
         </div>
         <div class="form-row">
-          <div class="fg"><label>Артикул (SKU)</label>
+          <div class="fg">
+            <label>Артикул (SKU)</label>
             <input type="text" name="sku" value="{{ product.sku if product else '' }}" placeholder="DS-2CD2143G2-I">
           </div>
           <div class="fg">
@@ -59,40 +105,79 @@
         </div>
 
         <div class="fg">
-          <label>Краткое описание (для карточки товара)</label>
-          <textarea name="short_description" id="short-editor" style="display:none">{{ product.short_description|safe if product and product.short_description else '' }}</textarea>
+          <label>Краткое описание <span style="color:var(--muted);font-size:11px">(отображается в каталоге)</span></label>
+          <div id="short-quill"></div>
+          <textarea name="short_description" id="short-hidden" style="display:none">{{ product.short_description|safe if product and product.short_description else '' }}</textarea>
         </div>
 
-        <div class="fg">
-          <label>Полное описание</label>
-          <textarea name="description" id="desc-editor" style="display:none">{{ product.description|safe if product and product.description else '' }}</textarea>
+        <div class="fg" style="margin-top:8px">
+          <label>Полное описание <span style="color:var(--muted);font-size:11px">(на странице товара)</span></label>
+          <div id="desc-quill"></div>
+          <textarea name="description" id="desc-hidden" style="display:none">{{ product.description|safe if product and product.description else '' }}</textarea>
         </div>
       </div>
 
+      <!-- ФОТО И ВИДЕО -->
       <div class="card">
         <div class="card-title">Фото и видео</div>
-        {% if product and product.images %}
+
+        <!-- ОСНОВНОЕ ФОТО -->
         <div class="fg">
-          <label>Текущие фото (✕ для удаления)</label>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-            {% for img in product.images %}
-            <div style="position:relative">
-              <img src="{{ img }}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-              <label style="position:absolute;top:4px;right:4px;background:rgba(255,77,109,0.9);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:white">
-                <input type="checkbox" name="del_img" value="{{ img }}" style="display:none" onchange="updateDelList()">✕
-              </label>
+          <label>
+            Основное фото
+            <span style="color:var(--muted);font-size:11px;font-weight:400"> — отображается в каталоге и карточке товара</span>
+          </label>
+          {% set main_img = product.images[0] if product and product.images else '' %}
+          {% if main_img %}
+          <div class="photo-section" style="margin-bottom:12px">
+            <div class="photo-section-title">Текущее главное фото</div>
+            <div class="main-photo-preview">
+              <span class="main-photo-badge">Главное</span>
+              <img src="{{ main_img }}" alt="Основное фото">
             </div>
-            {% endfor %}
+            <label class="fg-check" style="margin-top:10px">
+              <input type="checkbox" name="delete_main_image" value="{{ main_img }}" onchange="updateDelList()">
+              Удалить основное фото
+            </label>
           </div>
+          {% endif %}
+          <input type="file" name="main_image" accept="image/*">
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">Загрузите новое основное фото (заменит текущее)</div>
+        </div>
+
+        <!-- ДОПОЛНИТЕЛЬНЫЕ ФОТО -->
+        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+          <label>
+            Дополнительные фото
+            <span style="color:var(--muted);font-size:11px;font-weight:400"> — только на странице самого товара</span>
+          </label>
+          {% if product and product.images and product.images|length > 1 %}
+          <div class="photo-section" style="margin-bottom:12px">
+            <div class="photo-section-title">Текущие дополнительные фото</div>
+            <div class="extra-photos-grid">
+              {% for img in product.images[1:] %}
+              <div class="extra-photo-item">
+                <img src="{{ img }}" alt="доп фото">
+                <label class="del-photo-btn" title="Удалить">
+                  <input type="checkbox" name="del_img" value="{{ img }}" onchange="updateDelList()">✕
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          <input type="file" name="extra_images" multiple accept="image/*">
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">Можно загрузить несколько дополнительных фото</div>
           <input type="hidden" name="delete_images" id="delete_images" value="">
         </div>
-        {% endif %}
-        <div class="fg"><label>Добавить фото</label><input type="file" name="images" multiple accept="image/*"></div>
-        <div class="fg"><label>Ссылка на видеообзор (RuTube)</label>
+
+        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+          <label>Ссылка на видеообзор (RuTube)</label>
           <input type="url" name="video_url" value="{{ product.video_url if product else '' }}" placeholder="https://rutube.ru/video/...">
         </div>
       </div>
 
+      <!-- ХАРАКТЕРИСТИКИ -->
       <div class="card">
         <div class="card-title">Характеристики (JSON)</div>
         <div class="fg">
@@ -101,6 +186,7 @@
         </div>
       </div>
 
+      <!-- SEO -->
       <div class="card">
         <div class="card-title">SEO</div>
         {% if auto_seo %}
@@ -113,8 +199,10 @@
         <div class="fg"><label>SEO заголовок</label><input type="text" name="seo_title" value="{{ product.seo_title if product else '' }}" maxlength="70"></div>
         <div class="fg"><label>SEO описание</label><textarea name="seo_description" rows="2" maxlength="160">{{ product.seo_description if product else '' }}</textarea></div>
       </div>
+
     </div>
 
+    <!-- ПРАВАЯ КОЛОНКА -->
     <div>
       <div class="card">
         <div class="card-title">Цена</div>
@@ -122,58 +210,113 @@
         <div class="fg"><label>Старая цена, ₽</label><input type="number" name="old_price" value="{{ product.old_price if product else '0' }}" step="0.01" min="0"></div>
         <label class="fg-check"><input type="checkbox" name="in_stock" value="true" {{ 'checked' if not product or product.in_stock }}> В наличии</label>
       </div>
+
       <div class="card">
         <div class="card-title">Настройки</div>
         <label class="fg-check"><input type="checkbox" name="is_active" value="true" {{ 'checked' if not product or product.is_active }}> Активен</label>
         <label class="fg-check"><input type="checkbox" name="is_featured" value="true" {{ 'checked' if product and product.is_featured }}> На главной</label>
         <div class="fg" style="margin-top:12px"><label>Сортировка</label><input type="number" name="sort_order" value="{{ product.sort_order if product else '0' }}"></div>
       </div>
+
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">{{ 'Сохранить' if product else 'Создать товар' }}</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+          {{ 'Сохранить' if product else 'Создать товар' }}
+        </button>
         <a href="/admin/products" class="btn btn-secondary" style="width:100%;justify-content:center">Отмена</a>
       </div>
     </div>
   </div>
 </form>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <script>
-var tinyConfig = {
-  plugins: 'table lists link image code autoresize wordcount',
-  toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | table | link image | code | removeformat',
-  skin: 'oxide-dark',
-  content_css: 'dark',
-  autoresize_min_height: 250,
-  autoresize_max_height: 600,
-  content_style: 'body{background:#080d11;color:#e8edf2;font-family:Inter,sans-serif;font-size:14px;line-height:1.7;padding:10px} table{border-collapse:collapse;width:100%} table td,table th{border:1px solid rgba(0,229,255,0.3);padding:8px 12px} table th{background:rgba(0,229,255,0.1)} a{color:#00e5ff}',
-  images_upload_handler: function(blobInfo) {
-    return new Promise(function(resolve, reject) {
-      var fd = new FormData();
-      fd.append('file', blobInfo.blob(), blobInfo.filename());
-      fetch('/admin/upload-image', {method:'POST',body:fd})
-        .then(function(r){return r.json();})
-        .then(function(d){d.url ? resolve(d.url) : reject(d.error||'error');})
-        .catch(function(e){reject(String(e));});
-    });
-  }
-};
-
-if (typeof tinymce !== 'undefined') {
-  // Редактор описания товара
-  tinymce.init(Object.assign({}, tinyConfig, {
-    selector: '#desc-editor',
-    height: 400
-  }));
-  // Редактор краткого описания
-  tinymce.init(Object.assign({}, tinyConfig, {
-    selector: '#short-editor',
-    toolbar: 'bold italic underline | bullist numlist | link | removeformat',
-    height: 150,
-    autoresize_min_height: 120,
-    autoresize_max_height: 200
-  }));
+// ─── Загрузка картинок через наш endpoint ──────────────
+function makeImageUploader(quillInstance) {
+  return function() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const resp = await fetch('/admin/upload-image', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (data.url) {
+          const range = quillInstance.getSelection(true);
+          quillInstance.insertEmbed(range.index, 'image', data.url);
+          quillInstance.setSelection(range.index + 1);
+        } else {
+          alert('Ошибка загрузки: ' + (data.error || 'неизвестная'));
+        }
+      } catch(e) {
+        alert('Ошибка сети: ' + e);
+      }
+    };
+  };
 }
 
+// ─── Конфиг тулбара ───────────────────────────────────
+var fullToolbar = [
+  [{ 'header': [1, 2, 3, false] }],
+  ['bold', 'italic', 'underline', 'strike'],
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+  ['blockquote', 'code-block'],
+  ['link', 'image'],
+  [{ 'align': [] }],
+  ['clean']
+];
+
+var shortToolbar = [
+  ['bold', 'italic', 'underline'],
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+  ['link'],
+  ['clean']
+];
+
+// ─── Краткое описание ──────────────────────────────────
+var shortQuill = new Quill('#short-quill', {
+  theme: 'snow',
+  modules: {
+    toolbar: { container: shortToolbar }
+  },
+  placeholder: 'Краткое описание для карточки в каталоге...'
+});
+
+var shortExisting = document.getElementById('short-hidden').value;
+if (shortExisting && shortExisting.trim()) {
+  shortQuill.clipboard.dangerouslyPasteHTML(shortExisting);
+}
+
+// ─── Полное описание ───────────────────────────────────
+var descQuill = new Quill('#desc-quill', {
+  theme: 'snow',
+  modules: {
+    toolbar: {
+      container: fullToolbar,
+      handlers: { image: null } // назначим ниже
+    }
+  },
+  placeholder: 'Подробное описание товара...'
+});
+
+descQuill.getModule('toolbar').addHandler('image', makeImageUploader(descQuill));
+
+var descExisting = document.getElementById('desc-hidden').value;
+if (descExisting && descExisting.trim()) {
+  descQuill.clipboard.dangerouslyPasteHTML(descExisting);
+}
+
+// ─── Перед отправкой формы — выгружаем контент ────────
+document.getElementById('pform').addEventListener('submit', function() {
+  document.getElementById('short-hidden').value = shortQuill.root.innerHTML;
+  document.getElementById('desc-hidden').value = descQuill.root.innerHTML;
+});
+
+// ─── Бренд ────────────────────────────────────────────
 function updateBrandName(sel) {
   const opt = sel.options[sel.selectedIndex];
   if (opt.value) {
@@ -181,21 +324,29 @@ function updateBrandName(sel) {
     document.getElementById('brand_manual').value = '';
   }
 }
-function updateDelList() {
-  const checked = [...document.querySelectorAll('input[name="del_img"]:checked')].map(el => el.value);
-  document.getElementById('delete_images').value = checked.join(',');
-  document.querySelectorAll('input[name="del_img"]').forEach(cb => {
-    cb.closest('div[style*="position:relative"]').style.opacity = cb.checked ? '0.4' : '1';
-  });
-}
 
-document.getElementById('pform').addEventListener('submit', function() {
-  if (typeof tinymce !== 'undefined') {
-    var d = tinymce.get('desc-editor');
-    var s = tinymce.get('short-editor');
-    if (d) document.getElementById('desc-editor').value = d.getContent();
-    if (s) document.getElementById('short-editor').value = s.getContent();
+// ─── Удаление фото ────────────────────────────────────
+function updateDelList() {
+  // Основное фото
+  const mainDel = document.querySelector('input[name="delete_main_image"]:checked');
+  // Дополнительные
+  const extraDel = [...document.querySelectorAll('input[name="del_img"]:checked')].map(el => el.value);
+
+  const allDel = [];
+  if (mainDel) allDel.push(mainDel.value);
+  allDel.push(...extraDel);
+
+  document.getElementById('delete_images').value = allDel.join(',');
+
+  // Визуальная отметка на удаляемых фото
+  document.querySelectorAll('input[name="del_img"]').forEach(cb => {
+    const item = cb.closest('.extra-photo-item');
+    if (item) item.style.opacity = cb.checked ? '0.3' : '1';
+  });
+  if (mainDel) {
+    const preview = document.querySelector('.main-photo-preview');
+    if (preview) preview.style.opacity = mainDel.checked ? '0.3' : '1';
   }
-});
+}
 </script>
 {% endblock %}

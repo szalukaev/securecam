@@ -11,7 +11,7 @@
       <td>{{ o.customer_name }}</td>
       <td><a href="tel:{{ o.customer_phone }}" style="color:var(--accent)">{{ o.customer_phone }}</a></td>
       <td style="color:var(--muted)">{{ o.customer_email or '—' }}</td>
-      <td style="font-weight:600">{{ "{:,.0f}".format(o.total) }} ₽</td>
+      <td style="font-weight:600">{{ ("{:,.0f}".format(o.total)).replace(",", " ") }} ₽</td>
       <td style="color:var(--muted)">{{ o.items|length if o.items else 0 }}</td>
       <td><span class="badge badge-{{ o.status }}">{{ {'new':'Новый','processing':'В работе','done':'Выполнен','cancelled':'Отменён'}.get(o.status, o.status) }}</span></td>
       <td style="color:var(--muted)">{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>

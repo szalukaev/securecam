@@ -4,7 +4,6 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from sqlalchemy.orm import joinedload
-from sqlalchemy.orm import joinedload
 from app.models import get_db, Product, Category, Service, BlogPost, Brand
 from app.services import seo as seo_svc
 from app.config import settings
@@ -37,9 +36,9 @@ def base_ctx(request: Request, footer_brands=None) -> dict:
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: AsyncSession = Depends(get_db)):
-    footer_brands = (await db.execute(
-        select(Brand).where(Brand.show_in_footer == True).order_by(Brand.sort_order)
-    )).scalars().all()
+    # ИСПРАВЛЕНО: footer_brands теперь передаётся через base_ctx
+    footer_brands = await get_footer_brands(db)
+
     # Featured products
     products_q = await db.execute(
         select(Product).where(Product.is_active == True, Product.is_featured == True)
@@ -67,7 +66,7 @@ async def home(request: Request, db: AsyncSession = Depends(get_db)):
     )
     categories = cat_q.scalars().all()
 
-    ctx = base_ctx(request)
+    ctx = base_ctx(request, footer_brands)
     ctx.update({
         "featured": featured,
         "services": services,
@@ -107,7 +106,8 @@ async def catalog(
         total = (await db.execute(count_q)).scalar()
         products = (await db.execute(query.order_by(Product.sort_order, Product.id).offset(offset).limit(per_page))).scalars().all()
         brands_list = (await db.execute(select(Product.brand).distinct().where(Product.is_active == True, Product.brand != ""))).scalars().all()
-        ctx = base_ctx(request)
+        fb = await get_footer_brands(db)
+        ctx = base_ctx(request, fb)
         ctx.update({
             "products": products, "categories": [], "brands": sorted(brands_list),
             "total": total, "page": page, "per_page": per_page,
@@ -122,20 +122,19 @@ async def catalog(
         select(Category).where(Category.parent_id == None).order_by(Category.sort_order)
     )).scalars().all()
 
-    # Считаем товары в каждой категории
     cat_counts = {}
     for cat in root_cats:
         count = (await db.execute(
             select(func.count(Product.id)).where(Product.category_id == cat.id, Product.is_active == True)
         )).scalar()
-        # Считаем подкатегории
         subcats = (await db.execute(
             select(Category).where(Category.parent_id == cat.id).order_by(Category.sort_order)
         )).scalars().all()
         cat.subcategories = subcats
         cat_counts[cat.id] = count
 
-    ctx = base_ctx(request)
+    fb = await get_footer_brands(db)
+    ctx = base_ctx(request, fb)
     ctx.update({
         "root_categories": root_cats,
         "cat_counts": cat_counts,
@@ -150,17 +149,14 @@ async def catalog(
 
 @router.get("/catalog/category/{slug}", response_class=HTMLResponse)
 async def catalog_category(slug: str, request: Request, page: int = Query(1, ge=1), db: AsyncSession = Depends(get_db)):
-    from sqlalchemy.orm import joinedload
     cat_r = await db.execute(select(Category).options(joinedload(Category.parent)).where(Category.slug == slug))
     cat = cat_r.scalar_one_or_none()
     if not cat:
         raise HTTPException(404)
 
-    # Подкатегории
     subcats_r = await db.execute(select(Category).where(Category.parent_id == cat.id).order_by(Category.sort_order))
     subcategories = subcats_r.scalars().all()
 
-    # Считаем товары в подкатегориях
     sub_counts = {}
     for sub in subcategories:
         count = (await db.execute(

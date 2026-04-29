@@ -50,9 +50,9 @@
 
       <div class="price-block">
         <div>
-          <span class="price-main">{{ "{:,.0f}".format(product.price) }} ₽</span>
+          <span class="price-main">{{ ("{:,.0f}".format(product.price)).replace(",", " ") }} ₽</span>
           {% if product.old_price > product.price and product.old_price > 0 %}
-            <span class="price-old">{{ "{:,.0f}".format(product.old_price) }} ₽</span>
+            <span class="price-old">{{ ("{:,.0f}".format(product.old_price)).replace(",", " ") }} ₽</span>
           {% endif %}
         </div>
         <div class="stock-badge {% if product.in_stock %}in{% else %}out{% endif %}">
@@ -151,7 +151,7 @@
           {% if p.brand %}<div class="product-brand">{{ p.brand }}</div>{% endif %}
           <div class="product-name"><a href="/catalog/{{ p.slug }}">{{ p.name }}</a></div>
           <div class="product-price-row">
-            <div class="product-price">{{ "{:,.0f}".format(p.price) }} ₽</div>
+            <div class="product-price">{{ ("{:,.0f}".format(p.price)).replace(",", " ") }} ₽</div>
             <button class="product-add-btn"
               @click="cart.add({ id: {{ p.id }}, name: '{{ p.name | replace("'","\\'") }}', sku: '{{ p.sku }}', price: {{ p.price }} })">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>

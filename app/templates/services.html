@@ -11,7 +11,7 @@
       </div>
       <h3 class="service-name">{{ svc.name }}</h3>
       <p class="service-desc">{{ svc.short_description }}</p>
-      {% if svc.price_from %}<p class="service-price">от {{ "{:,.0f}".format(svc.price_from) }} ₽</p>{% endif %}
+      {% if svc.price_from %}<p class="service-price">от {{ ("{:,.0f}".format(svc.price_from)).replace(",", " ") }} ₽</p>{% endif %}
     </a>
     {% endfor %}
   </div>

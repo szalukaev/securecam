@@ -56,7 +56,7 @@
           <tr>
             <td>{{ row.name[:50] }}{% if row.name|length > 50 %}...{% endif %}</td>
             <td style="color:var(--muted)">{{ row.short_description[:60] }}{% if row.short_description|length > 60 %}...{% endif %}</td>
-            <td>{{ "{:,.0f}".format(row.price) }} ₽</td>
+            <td>{{ ("{:,.0f}".format(row.price)).replace(",", " ") }} ₽</td>
             <td>{{ row.category }}</td>
             <td>{{ row.brand }}</td>
           </tr>

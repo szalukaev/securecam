@@ -72,7 +72,6 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 async def brands_list(request: Request, db: AsyncSession = Depends(get_db)):
     require_admin(request)
     brands = (await db.execute(select(Brand).order_by(Brand.sort_order, Brand.name))).scalars().all()
-    # Считаем товары для каждого бренда
     brand_counts = {}
     for b in brands:
         count = (await db.execute(
@@ -328,7 +327,8 @@ async def product_create(
     video_url: str = Form(""), specs_json: str = Form("{}"),
     seo_title: str = Form(""), seo_description: str = Form(""),
     sort_order: int = Form(0),
-    images: list[UploadFile] = File(default=[]),
+    main_image: Optional[UploadFile] = File(None),
+    extra_images: list[UploadFile] = File(default=[]),
     db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
@@ -336,20 +336,26 @@ async def product_create(
     existing = (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none()
     if existing:
         slug = f"{slug}-{sku.lower() or uuid.uuid4().hex[:6]}"
+
+    # images[0] = основное, остальные — дополнительные
     saved_images = []
-    for img in images:
+    if main_image and main_image.filename:
+        saved_images.append(await save_upload(main_image))
+    for img in extra_images:
         if img and img.filename:
             saved_images.append(await save_upload(img))
+
     try:
         specs = json.loads(specs_json)
     except Exception:
         specs = {}
-    # Если выбран бренд из справочника — берём его название
+
     brand_name = brand
     if brand_id:
         b = (await db.execute(select(Brand).where(Brand.id == brand_id))).scalar_one_or_none()
         if b:
             brand_name = b.name
+
     p = Product(
         name=name, slug=slug, sku=sku, brand=brand_name, brand_id=brand_id or None,
         category_id=category_id or None,
@@ -390,32 +396,46 @@ async def product_update(
     video_url: str = Form(""), specs_json: str = Form("{}"),
     seo_title: str = Form(""), seo_description: str = Form(""),
     sort_order: int = Form(0),
-    images: list[UploadFile] = File(default=[]),
+    main_image: Optional[UploadFile] = File(None),
+    extra_images: list[UploadFile] = File(default=[]),
     delete_images: str = Form(""),
     db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     p = (await db.execute(select(Product).where(Product.id == pid))).scalar_one_or_none()
     if not p: raise HTTPException(404)
+
     try:
         specs = json.loads(specs_json)
     except Exception:
         specs = {}
+
     current_images = list(p.images or [])
+
+    # Удаляем отмеченные фото
     if delete_images:
         for img_path in delete_images.split(","):
             img_path = img_path.strip()
-            if img_path in current_images:
+            if img_path and img_path in current_images:
                 current_images.remove(img_path)
                 _delete_file(img_path)
-    for img in images:
+
+    # Новое основное фото — вставляем на позицию 0
+    if main_image and main_image.filename:
+        new_main = await save_upload(main_image)
+        current_images.insert(0, new_main)
+
+    # Дополнительные — добавляем в конец
+    for img in extra_images:
         if img and img.filename:
             current_images.append(await save_upload(img))
+
     brand_name = brand
     if brand_id:
         b = (await db.execute(select(Brand).where(Brand.id == brand_id))).scalar_one_or_none()
         if b:
             brand_name = b.name
+
     p.name = name; p.sku = sku; p.brand = brand_name; p.brand_id = brand_id or None
     p.category_id = category_id or None
     p.description = description; p.short_description = short_description
@@ -677,10 +697,10 @@ async def products_bulk_edit(
                 p.brand = b.name
         if price_action and price_value > 0:
             if price_action == "plus_pct":
-                p.old_price = 0  # очищаем старую цену
+                p.old_price = 0
                 p.price = round(p.price * (1 + price_value / 100), 2)
             elif price_action == "minus_pct":
-                p.old_price = 0  # очищаем старую цену
+                p.old_price = 0
                 p.price = round(p.price * (1 - price_value / 100), 2)
 
     await db.commit()
@@ -710,7 +730,6 @@ async def import_preview(
         wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
         ws = wb.active
 
-        # Читаем заголовки из первой строки
         headers = {}
         first_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
         for i, h in enumerate(first_row):
@@ -719,10 +738,8 @@ async def import_preview(
 
         rows = []
         for row in ws.iter_rows(min_row=2, values_only=True):
-            # Пропускаем пустые строки
             if not any(v for v in row if v is not None):
                 continue
-            # Берём по индексам из заголовков
             def get(key, fallback_idx):
                 idx = headers.get(key, fallback_idx)
                 return row[idx] if idx < len(row) else None
@@ -739,7 +756,6 @@ async def import_preview(
                 "brand": str(get('бренд', 13) or '').strip(),
             })
 
-        # Сохраняем в сессию через JSON файл
         import json, tempfile
         tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, dir='/tmp')
         json.dump(rows, tmp, ensure_ascii=False)
@@ -748,13 +764,12 @@ async def import_preview(
         cats = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
         brands_list = (await db.execute(select(Brand).order_by(Brand.name))).scalars().all()
 
-        # Уникальные категории и бренды из файла
         file_cats = sorted(set(r['category'] for r in rows if r['category']))
         file_brands = sorted(set(r['brand'] for r in rows if r['brand']))
 
         return templates.TemplateResponse("admin/import_preview.html", {
             **admin_ctx(request),
-            "rows": rows[:5],  # превью первых 5
+            "rows": rows[:5],
             "total": len(rows),
             "file_cats": file_cats,
             "file_brands": file_brands,
@@ -788,9 +803,8 @@ async def import_execute(
 
     form = await request.form()
 
-    # Строим маппинги категорий и брендов
-    cat_map = {}   # "название из файла" -> category_id
-    brand_map = {} # "название из файла" -> (brand_id, brand_name)
+    cat_map = {}
+    brand_map = {}
 
     for key, val in form.items():
         if key.startswith("cat_map_") and val:
@@ -809,7 +823,6 @@ async def import_execute(
             name = row['name']
             slug = slugify(name)
 
-            # Проверяем существует ли товар
             existing = (await db.execute(
                 select(Product).where(Product.slug == slug)
             )).scalar_one_or_none()
@@ -824,7 +837,6 @@ async def import_execute(
                     brand_name = b.name
 
             if existing:
-                # Обновляем
                 existing.short_description = row['short_description']
                 existing.price = row['price']
                 if category_id:
@@ -836,8 +848,6 @@ async def import_execute(
                     existing.brand = row['brand']
                 updated += 1
             else:
-                # Создаём новый
-                # Уникальный slug если конфликт
                 check = (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none()
                 if check:
                     slug = f"{slug}-{created}"
@@ -853,7 +863,6 @@ async def import_execute(
                 )
                 db.add(p)
                 await db.flush()
-                # Автосео
                 p.seo_title = product_seo(p)["title"]
                 p.seo_description = product_seo(p)["description"]
                 created += 1

@@ -14,7 +14,7 @@
         <td><a href="/catalog/{{ p.slug }}" target="_blank" style="color:var(--text)">{{ p.name[:55] }}{% if p.name|length > 55 %}...{% endif %}</a></td>
         <td style="color:var(--muted)">{{ p.sku or '—' }}</td>
         <td>{{ p.brand or '—' }}</td>
-        <td style="color:var(--accent);font-weight:600">{{ "{:,.0f}".format(p.price) }} ₽</td>
+        <td style="color:var(--accent);font-weight:600">{{ ("{:,.0f}".format(p.price)).replace(",", " ") }} ₽</td>
         <td><div style="display:flex;gap:6px">
           <a href="/admin/products/{{ p.id }}/edit" class="btn btn-secondary btn-sm">Ред.</a>
           <form method="post" action="/admin/products/{{ p.id }}/delete" onsubmit="return confirm('Удалить?')" style="margin:0"><button class="btn btn-danger btn-sm">Удалить</button></form>

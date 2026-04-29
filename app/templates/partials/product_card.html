@@ -15,8 +15,8 @@
     </div>
     <div class="product-price-row">
       <div>
-        <div class="product-price">{{ "{:,.0f}".format(p.price) }} ₽</div>
-        {% if p.old_price > p.price and p.old_price > 0 %}<div class="product-old-price">{{ "{:,.0f}".format(p.old_price) }} ₽</div>{% endif %}
+        <div class="product-price">{{ ("{:,.0f}".format(p.price)).replace(",", " ") }} ₽</div>
+        {% if p.old_price > p.price and p.old_price > 0 %}<div class="product-old-price">{{ ("{:,.0f}".format(p.old_price)).replace(",", " ") }} ₽</div>{% endif %}
       </div>
       <div class="product-actions">
         <button class="product-add-btn"

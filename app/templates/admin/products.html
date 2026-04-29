@@ -79,7 +79,7 @@
           <td><a href="/catalog/{{ p.slug }}" target="_blank" style="color:var(--text)">{{ p.name[:50] }}{% if p.name|length > 50 %}...{% endif %}</a></td>
           <td style="color:var(--muted)">{{ p.sku or '—' }}</td>
           <td>{{ p.brand or '—' }}</td>
-          <td style="color:var(--accent);font-weight:600">{{ "{:,.0f}".format(p.price) }} ₽</td>
+          <td style="color:var(--accent);font-weight:600">{{ ("{:,.0f}".format(p.price)).replace(",", " ") }} ₽</td>
           <td>{% if p.is_active %}<span style="color:var(--green)">✓</span>{% else %}<span style="color:var(--red)">✗</span>{% endif %}</td>
           <td>
             <div style="display:flex;gap:6px">

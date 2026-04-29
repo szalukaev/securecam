@@ -21,7 +21,6 @@ function cartStore() {
         const saved = sessionStorage.getItem('sc_cart');
         if (saved) this.items = JSON.parse(saved);
       } catch {}
-      // Синхронизируем избранное и сравнение
       wishlistStore.load();
       compareStore.load();
     },
@@ -167,25 +166,35 @@ function showToast(msg, type = 'success', product = null) {
 }
 
 // ─── Catalog view toggle ──────────────────────────
+// ИСПРАВЛЕНО: применяем только к grid-у без атрибута data-fixed-view
+// Гриды с id="home-featured-grid" или data-view уже заданным хардкодом — не трогаем
+
 function initCatalogView() {
   const savedView = sessionStorage.getItem('catalog_view') || 'list';
+
+  // Применяем только к каталожным гридам (не к главной)
   setCatalogView(savedView, false);
 
-  document.querySelectorAll('[data-view]').forEach(btn => {
+  document.querySelectorAll('[data-view-toggle]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const v = btn.dataset.view;
+      const v = btn.dataset.viewToggle;
       setCatalogView(v, true);
     });
   });
 }
 
 function setCatalogView(view, save) {
-  const grid = document.querySelector('.products-grid');
-  if (!grid) return;
-  grid.dataset.view = view;
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === view);
+  // Берём все грид-контейнеры БЕЗ фиксированного вида (без data-fixed)
+  const grids = document.querySelectorAll('.products-grid:not([data-fixed])');
+  grids.forEach(grid => {
+    grid.dataset.view = view;
   });
+
+  // Кнопки переключения
+  document.querySelectorAll('[data-view-toggle]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.viewToggle === view);
+  });
+
   if (save) sessionStorage.setItem('catalog_view', view);
 }
 
