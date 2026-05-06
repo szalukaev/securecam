@@ -1,4 +1,7 @@
-/* SECURECAM — Main JavaScript */
+/* ═══════════════════════════════════════════════════
+   SECURECAM — Main JavaScript
+═══════════════════════════════════════════════════ */
+
 function cartStore() {
   return {
     items: [], open: false, openOrder: false, orderDone: false,
@@ -37,6 +40,7 @@ function cartStore() {
     },
   };
 }
+
 const wishlistStore = {
   items: [],
   load() { try { this.items = JSON.parse(sessionStorage.getItem('sc_wish') || '[]'); } catch {} },
@@ -51,6 +55,7 @@ const wishlistStore = {
   get count() { return this.items.length; },
   _notify() { document.dispatchEvent(new CustomEvent('wishlist-updated')); },
 };
+
 const compareStore = {
   items: [],
   load() { try { this.items = JSON.parse(sessionStorage.getItem('sc_compare') || '[]'); } catch {} },
@@ -68,6 +73,7 @@ const compareStore = {
   get count() { return this.items.length; },
   _notify() { document.dispatchEvent(new CustomEvent('compare-updated')); },
 };
+
 function showToast(msg, type = 'success', product = null) {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -83,11 +89,18 @@ function showToast(msg, type = 'success', product = null) {
   requestAnimationFrame(() => toast.classList.add('visible'));
   setTimeout(() => { toast.classList.remove('visible'); setTimeout(() => toast.remove(), 300); }, 5000);
 }
+
+// ─── Catalog view toggle ───────────────────────────────────
+// Применяем ТОЛЬКО к .catalog-products-grid — не трогает грид на главной
+
 function initCatalogView() {
   const grid = document.querySelector('.catalog-products-grid');
-  if (!grid) return;
+  if (!grid) return; // нет каталожного грида — выходим
+
   const savedView = sessionStorage.getItem('catalog_view') || 'list';
   grid.dataset.view = savedView;
+
+  // Устанавливаем активную кнопку
   document.querySelectorAll('.view-toggle [data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === savedView);
     btn.addEventListener('click', () => {
@@ -100,6 +113,8 @@ function initCatalogView() {
     });
   });
 }
+
+// ─── Counters ─────────────────────────────────────────────
 function updateNavCounters() {
   const wc = document.getElementById('wishlist-count');
   const cc = document.getElementById('compare-count');
@@ -108,6 +123,7 @@ function updateNavCounters() {
 }
 document.addEventListener('wishlist-updated', updateNavCounters);
 document.addEventListener('compare-updated', updateNavCounters);
+
 function initGallery() {
   const thumbs = document.querySelectorAll('.gallery-thumb');
   const main = document.querySelector('.gallery-main img');
@@ -120,6 +136,7 @@ function initGallery() {
     });
   });
 }
+
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -132,10 +149,16 @@ function initTabs() {
     });
   });
 }
+
 function formatPrice(n) { return Math.round(n).toLocaleString('ru-RU'); }
+
 document.addEventListener('DOMContentLoaded', () => {
-  initGallery(); initTabs(); initCatalogView(); updateNavCounters();
+  initGallery();
+  initTabs();
+  initCatalogView();
+  updateNavCounters();
 });
+
 function toggleSearch() {
   const bar = document.getElementById('search-bar');
   bar.classList.toggle('active');

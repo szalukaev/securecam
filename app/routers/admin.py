@@ -1,6 +1,6 @@
 import os, uuid, json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import (APIRouter, Depends, Request, HTTPException,
                      Form, UploadFile, File, Query)
@@ -26,7 +26,7 @@ def admin_ctx(request: Request) -> dict:
     return {"request": request, "site_name": settings.SITE_NAME}
 
 
-# ─── Auth ──────────────────────────────────────────────────
+# ─── Auth ───────────────────────────────────────────────────
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str = ""):
@@ -46,7 +46,7 @@ async def logout():
     return r
 
 
-# ─── Dashboard ─────────────────────────────────────────────
+# ─── Dashboard ──────────────────────────────────────────────
 
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
@@ -66,7 +66,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     return templates.TemplateResponse("admin/dashboard.html", ctx)
 
 
-# ─── Brands ────────────────────────────────────────────────
+# ─── Brands ─────────────────────────────────────────────────
 
 @router.get("/brands", response_class=HTMLResponse)
 async def brands_list(request: Request, db: AsyncSession = Depends(get_db)):
@@ -74,9 +74,7 @@ async def brands_list(request: Request, db: AsyncSession = Depends(get_db)):
     brands = (await db.execute(select(Brand).order_by(Brand.sort_order, Brand.name))).scalars().all()
     brand_counts = {}
     for b in brands:
-        count = (await db.execute(
-            select(func.count(Product.id)).where(Product.brand_id == b.id)
-        )).scalar()
+        count = (await db.execute(select(func.count(Product.id)).where(Product.brand_id == b.id))).scalar()
         brand_counts[b.id] = count or 0
     return templates.TemplateResponse("admin/brands.html", {**admin_ctx(request), "brands": brands, "brand_counts": brand_counts})
 
@@ -87,12 +85,10 @@ async def brand_new(request: Request):
 
 @router.post("/brands/new")
 async def brand_create(
-    request: Request,
-    name: str = Form(...), description: str = Form(""),
+    request: Request, name: str = Form(...), description: str = Form(""),
     website: str = Form(""), sort_order: int = Form(0),
     seo_title: str = Form(""), seo_description: str = Form(""),
-    logo: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    logo: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     form = await request.form()
@@ -102,13 +98,10 @@ async def brand_create(
     logo_url = ""
     if logo and logo.filename:
         logo_url = await save_upload(logo)
-    b = Brand(
-        name=name, slug=slugify(name), description=description,
-        website=website, logo_url=logo_url, sort_order=sort_order,
-        is_official_dealer=is_official_dealer,
-        show_in_footer=show_in_footer, show_in_catalog=show_in_catalog,
-        seo_title=seo_title, seo_description=seo_description,
-    )
+    b = Brand(name=name, slug=slugify(name), description=description, website=website,
+              logo_url=logo_url, sort_order=sort_order, is_official_dealer=is_official_dealer,
+              show_in_footer=show_in_footer, show_in_catalog=show_in_catalog,
+              seo_title=seo_title, seo_description=seo_description)
     db.add(b)
     await db.commit()
     return RedirectResponse("/admin/brands", status_code=302)
@@ -122,31 +115,22 @@ async def brand_edit(bid: int, request: Request, db: AsyncSession = Depends(get_
 
 @router.post("/brands/{bid}/edit")
 async def brand_update(
-    bid: int, request: Request,
-    name: str = Form(...), description: str = Form(""),
+    bid: int, request: Request, name: str = Form(...), description: str = Form(""),
     website: str = Form(""), sort_order: int = Form(0),
     seo_title: str = Form(""), seo_description: str = Form(""),
-    logo: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    logo: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     form = await request.form()
-    is_official_dealer = "is_official_dealer" in form
-    show_in_footer = "show_in_footer" in form
-    show_in_catalog = "show_in_catalog" in form
-    delete_logo = form.get("delete_logo", "")
     brand = (await db.execute(select(Brand).where(Brand.id == bid))).scalar_one_or_none()
     if not brand: raise HTTPException(404)
-    brand.name = name; brand.description = description
-    brand.website = website; brand.sort_order = sort_order
-    brand.is_official_dealer = is_official_dealer
-    brand.show_in_footer = show_in_footer
-    brand.show_in_catalog = show_in_catalog
+    brand.name = name; brand.description = description; brand.website = website; brand.sort_order = sort_order
+    brand.is_official_dealer = "is_official_dealer" in form
+    brand.show_in_footer = "show_in_footer" in form
+    brand.show_in_catalog = "show_in_catalog" in form
     brand.seo_title = seo_title; brand.seo_description = seo_description
-    if delete_logo:
-        _delete_file(brand.logo_url); brand.logo_url = ""
-    if logo and logo.filename:
-        brand.logo_url = await save_upload(logo)
+    if form.get("delete_logo"): _delete_file(brand.logo_url); brand.logo_url = ""
+    if logo and logo.filename: brand.logo_url = await save_upload(logo)
     await db.commit()
     return RedirectResponse("/admin/brands", status_code=302)
 
@@ -159,7 +143,7 @@ async def brand_delete(bid: int, request: Request, db: AsyncSession = Depends(ge
     return RedirectResponse("/admin/brands", status_code=302)
 
 
-# ─── Categories ────────────────────────────────────────────
+# ─── Categories ─────────────────────────────────────────────
 
 @router.get("/categories", response_class=HTMLResponse)
 async def categories_list(request: Request, db: AsyncSession = Depends(get_db)):
@@ -175,17 +159,14 @@ async def category_new(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.post("/categories/new")
 async def category_create(
-    request: Request,
-    name: str = Form(...), description: str = Form(""),
+    request: Request, name: str = Form(...), description: str = Form(""),
     parent_id: Optional[int] = Form(None), sort_order: int = Form(0),
     seo_title: str = Form(""), seo_description: str = Form(""),
-    image: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    image: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     image_url = ""
-    if image and image.filename:
-        image_url = await save_upload(image)
+    if image and image.filename: image_url = await save_upload(image)
     cat = Category(name=name, slug=slugify(name), description=description,
                    parent_id=parent_id or None, sort_order=sort_order,
                    seo_title=seo_title, seo_description=seo_description, image_url=image_url)
@@ -203,8 +184,7 @@ async def category_edit(cat_id: int, request: Request, db: AsyncSession = Depend
 
 @router.post("/categories/{cat_id}/edit")
 async def category_update(
-    cat_id: int, request: Request,
-    name: str = Form(...), description: str = Form(""),
+    cat_id: int, request: Request, name: str = Form(...), description: str = Form(""),
     parent_id: Optional[int] = Form(None), sort_order: int = Form(0),
     seo_title: str = Form(""), seo_description: str = Form(""),
     image: Optional[UploadFile] = File(None), delete_image: str = Form(""),
@@ -213,13 +193,10 @@ async def category_update(
     require_admin(request)
     cat = (await db.execute(select(Category).where(Category.id == cat_id))).scalar_one_or_none()
     if not cat: raise HTTPException(404)
-    cat.name = name; cat.description = description
-    cat.parent_id = parent_id or None; cat.sort_order = sort_order
-    cat.seo_title = seo_title; cat.seo_description = seo_description
-    if delete_image:
-        _delete_file(cat.image_url); cat.image_url = ""
-    if image and image.filename:
-        cat.image_url = await save_upload(image)
+    cat.name = name; cat.description = description; cat.parent_id = parent_id or None
+    cat.sort_order = sort_order; cat.seo_title = seo_title; cat.seo_description = seo_description
+    if delete_image: _delete_file(cat.image_url); cat.image_url = ""
+    if image and image.filename: cat.image_url = await save_upload(image)
     await db.commit()
     return RedirectResponse("/admin/categories", status_code=302)
 
@@ -232,7 +209,7 @@ async def category_delete(cat_id: int, request: Request, db: AsyncSession = Depe
     return RedirectResponse("/admin/categories", status_code=302)
 
 
-# ─── Products Tree ────────────────────────────────────
+# ─── Products Tree ───────────────────────────────────────────
 
 @router.get("/products/tree", response_class=HTMLResponse)
 async def products_tree(request: Request, db: AsyncSession = Depends(get_db)):
@@ -249,7 +226,6 @@ async def products_tree(request: Request, db: AsyncSession = Depends(get_db)):
     ctx.update({"root_cats": root_cats, "cat_counts": cat_counts, "no_cat_count": no_cat_count})
     return templates.TemplateResponse("admin/products_tree.html", ctx)
 
-
 @router.get("/products/category/{cat_id}", response_class=HTMLResponse)
 async def products_in_category(cat_id: int, request: Request, page: int = Query(1, ge=1), db: AsyncSession = Depends(get_db)):
     require_admin(request)
@@ -260,23 +236,18 @@ async def products_in_category(cat_id: int, request: Request, page: int = Query(
         parent = (await db.execute(select(Category).where(Category.id == cat.parent_id))).scalar_one_or_none()
         if parent: breadcrumb.insert(0, parent)
     subcats = (await db.execute(select(Category).where(Category.parent_id == cat_id).order_by(Category.sort_order, Category.name))).scalars().all()
-    sub_counts = {}
-    for sub in subcats:
-        sub_counts[sub.id] = (await db.execute(select(func.count(Product.id)).where(Product.category_id == sub.id))).scalar() or 0
-    per_page = 30
-    offset = (page - 1) * per_page
+    sub_counts = {s.id: (await db.execute(select(func.count(Product.id)).where(Product.category_id == s.id))).scalar() or 0 for s in subcats}
+    per_page = 30; offset = (page - 1) * per_page
     products = (await db.execute(select(Product).where(Product.category_id == cat_id).order_by(Product.sort_order, Product.id.desc()).offset(offset).limit(per_page))).scalars().all()
     total = (await db.execute(select(func.count(Product.id)).where(Product.category_id == cat_id))).scalar() or 0
     ctx = admin_ctx(request)
     ctx.update({"cat": cat, "breadcrumb": breadcrumb, "subcats": subcats, "sub_counts": sub_counts, "products": products, "total": total, "page": page, "pages": (total + per_page - 1) // per_page})
     return templates.TemplateResponse("admin/products_category.html", ctx)
 
-
 @router.get("/products/no-category", response_class=HTMLResponse)
 async def products_no_category(request: Request, page: int = Query(1, ge=1), db: AsyncSession = Depends(get_db)):
     require_admin(request)
-    per_page = 30
-    offset = (page - 1) * per_page
+    per_page = 30; offset = (page - 1) * per_page
     products = (await db.execute(select(Product).where(Product.category_id == None).order_by(Product.id.desc()).offset(offset).limit(per_page))).scalars().all()
     total = (await db.execute(select(func.count(Product.id)).where(Product.category_id == None))).scalar() or 0
     ctx = admin_ctx(request)
@@ -284,13 +255,12 @@ async def products_no_category(request: Request, page: int = Query(1, ge=1), db:
     return templates.TemplateResponse("admin/products_no_category.html", ctx)
 
 
-# ─── Products ──────────────────────────────────────────────
+# ─── Products ────────────────────────────────────────────────
 
 @router.get("/products", response_class=HTMLResponse)
 async def products_list(request: Request, page: int = Query(1, ge=1), q: str = Query(""), db: AsyncSession = Depends(get_db)):
     require_admin(request)
-    per_page = 30
-    offset = (page - 1) * per_page
+    per_page = 30; offset = (page - 1) * per_page
     query = select(Product)
     if q:
         from sqlalchemy import or_
@@ -319,25 +289,21 @@ async def product_new(request: Request, db: AsyncSession = Depends(get_db)):
 async def product_create(
     request: Request,
     name: str = Form(...), sku: str = Form(""), brand: str = Form(""),
-    brand_id: Optional[int] = Form(None),
-    category_id: Optional[int] = Form(None),
+    brand_id: Optional[int] = Form(None), category_id: Optional[int] = Form(None),
     description: str = Form(""), short_description: str = Form(""),
     price: float = Form(0), old_price: float = Form(0),
     in_stock: bool = Form(True), is_active: bool = Form(True), is_featured: bool = Form(False),
     video_url: str = Form(""), specs_json: str = Form("{}"),
-    seo_title: str = Form(""), seo_description: str = Form(""),
-    sort_order: int = Form(0),
+    seo_title: str = Form(""), seo_description: str = Form(""), sort_order: int = Form(0),
     main_image: Optional[UploadFile] = File(None),
-    extra_images: list[UploadFile] = File(default=[]),
+    extra_images: List[UploadFile] = File(default=[]),
     db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     slug = slugify(name)
-    existing = (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none()
-    if existing:
+    if (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none():
         slug = f"{slug}-{sku.lower() or uuid.uuid4().hex[:6]}"
 
-    # images[0] = основное, остальные — дополнительные
     saved_images = []
     if main_image and main_image.filename:
         saved_images.append(await save_upload(main_image))
@@ -345,24 +311,23 @@ async def product_create(
         if img and img.filename:
             saved_images.append(await save_upload(img))
 
-    try:
-        specs = json.loads(specs_json)
-    except Exception:
-        specs = {}
+    try: specs = json.loads(specs_json)
+    except: specs = {}
 
     brand_name = brand
     if brand_id:
         b = (await db.execute(select(Brand).where(Brand.id == brand_id))).scalar_one_or_none()
-        if b:
-            brand_name = b.name
+        if b: brand_name = b.name
+
+    # Файлы для скачивания
+    form = await request.form()
+    files_data = await _parse_files_from_form(form)
 
     p = Product(
         name=name, slug=slug, sku=sku, brand=brand_name, brand_id=brand_id or None,
-        category_id=category_id or None,
-        description=description, short_description=short_description,
-        price=price, old_price=old_price, in_stock=in_stock,
-        is_active=is_active, is_featured=is_featured,
-        images=saved_images, video_url=video_url, specs=specs, sort_order=sort_order,
+        category_id=category_id or None, description=description, short_description=short_description,
+        price=price, old_price=old_price, in_stock=in_stock, is_active=is_active, is_featured=is_featured,
+        images=saved_images, video_url=video_url, specs=specs, sort_order=sort_order, files=files_data,
     )
     db.add(p)
     await db.commit()
@@ -379,25 +344,23 @@ async def product_edit(pid: int, request: Request, db: AsyncSession = Depends(ge
     if not product: raise HTTPException(404)
     cats = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
     brands = (await db.execute(select(Brand).where(Brand.show_in_catalog == True).order_by(Brand.name))).scalars().all()
-    auto_seo = product_seo(product)
     return templates.TemplateResponse("admin/product_form.html", {
-        **admin_ctx(request), "product": product, "categories": cats, "brands": brands, "auto_seo": auto_seo
+        **admin_ctx(request), "product": product, "categories": cats,
+        "brands": brands, "auto_seo": product_seo(product)
     })
 
 @router.post("/products/{pid}/edit")
 async def product_update(
     pid: int, request: Request,
     name: str = Form(...), sku: str = Form(""), brand: str = Form(""),
-    brand_id: Optional[int] = Form(None),
-    category_id: Optional[int] = Form(None),
+    brand_id: Optional[int] = Form(None), category_id: Optional[int] = Form(None),
     description: str = Form(""), short_description: str = Form(""),
     price: float = Form(0), old_price: float = Form(0),
     in_stock: bool = Form(True), is_active: bool = Form(True), is_featured: bool = Form(False),
     video_url: str = Form(""), specs_json: str = Form("{}"),
-    seo_title: str = Form(""), seo_description: str = Form(""),
-    sort_order: int = Form(0),
+    seo_title: str = Form(""), seo_description: str = Form(""), sort_order: int = Form(0),
     main_image: Optional[UploadFile] = File(None),
-    extra_images: list[UploadFile] = File(default=[]),
+    extra_images: List[UploadFile] = File(default=[]),
     delete_images: str = Form(""),
     db: AsyncSession = Depends(get_db)
 ):
@@ -405,14 +368,10 @@ async def product_update(
     p = (await db.execute(select(Product).where(Product.id == pid))).scalar_one_or_none()
     if not p: raise HTTPException(404)
 
-    try:
-        specs = json.loads(specs_json)
-    except Exception:
-        specs = {}
+    try: specs = json.loads(specs_json)
+    except: specs = {}
 
     current_images = list(p.images or [])
-
-    # Удаляем отмеченные фото
     if delete_images:
         for img_path in delete_images.split(","):
             img_path = img_path.strip()
@@ -420,12 +379,9 @@ async def product_update(
                 current_images.remove(img_path)
                 _delete_file(img_path)
 
-    # Новое основное фото — вставляем на позицию 0
     if main_image and main_image.filename:
-        new_main = await save_upload(main_image)
-        current_images.insert(0, new_main)
+        current_images.insert(0, await save_upload(main_image))
 
-    # Дополнительные — добавляем в конец
     for img in extra_images:
         if img and img.filename:
             current_images.append(await save_upload(img))
@@ -433,15 +389,17 @@ async def product_update(
     brand_name = brand
     if brand_id:
         b = (await db.execute(select(Brand).where(Brand.id == brand_id))).scalar_one_or_none()
-        if b:
-            brand_name = b.name
+        if b: brand_name = b.name
+
+    # Файлы для скачивания
+    form = await request.form()
+    files_data = await _parse_files_from_form(form, existing=list(p.files or []))
 
     p.name = name; p.sku = sku; p.brand = brand_name; p.brand_id = brand_id or None
-    p.category_id = category_id or None
-    p.description = description; p.short_description = short_description
-    p.price = price; p.old_price = old_price
-    p.in_stock = in_stock; p.is_active = is_active; p.is_featured = is_featured
-    p.images = current_images; p.video_url = video_url; p.specs = specs; p.sort_order = sort_order
+    p.category_id = category_id or None; p.description = description; p.short_description = short_description
+    p.price = price; p.old_price = old_price; p.in_stock = in_stock; p.is_active = is_active
+    p.is_featured = is_featured; p.images = current_images; p.video_url = video_url
+    p.specs = specs; p.sort_order = sort_order; p.files = files_data
     p.seo_title = seo_title if seo_title.strip() else product_seo(p)["title"]
     p.seo_description = seo_description if seo_description.strip() else product_seo(p)["description"]
     await db.commit()
@@ -455,7 +413,7 @@ async def product_delete(pid: int, request: Request, db: AsyncSession = Depends(
     return RedirectResponse("/admin/products", status_code=302)
 
 
-# ─── Services ──────────────────────────────────────────────
+# ─── Services ────────────────────────────────────────────────
 
 @router.get("/services", response_class=HTMLResponse)
 async def services_list(request: Request, db: AsyncSession = Depends(get_db)):
@@ -470,23 +428,18 @@ async def service_new(request: Request):
 
 @router.post("/services/new")
 async def service_create(
-    request: Request,
-    name: str = Form(...), description: str = Form(""), short_description: str = Form(""),
-    price_from: float = Form(0), price_to: float = Form(0),
-    icon: str = Form("shield"), is_active: bool = Form(True), is_featured: bool = Form(False),
-    seo_title: str = Form(""), seo_description: str = Form(""),
-    sort_order: int = Form(0),
-    image: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    request: Request, name: str = Form(...), description: str = Form(""), short_description: str = Form(""),
+    price_from: float = Form(0), price_to: float = Form(0), icon: str = Form("shield"),
+    is_active: bool = Form(True), is_featured: bool = Form(False),
+    seo_title: str = Form(""), seo_description: str = Form(""), sort_order: int = Form(0),
+    image: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     image_url = ""
-    if image and image.filename:
-        image_url = await save_upload(image)
-    svc = Service(name=name, slug=slugify(name), description=description,
-                  short_description=short_description, price_from=price_from, price_to=price_to,
-                  icon=icon, is_active=is_active, is_featured=is_featured,
-                  image_url=image_url, sort_order=sort_order)
+    if image and image.filename: image_url = await save_upload(image)
+    svc = Service(name=name, slug=slugify(name), description=description, short_description=short_description,
+                  price_from=price_from, price_to=price_to, icon=icon, is_active=is_active,
+                  is_featured=is_featured, image_url=image_url, sort_order=sort_order)
     db.add(svc)
     await db.commit()
     await db.refresh(svc)
@@ -500,18 +453,14 @@ async def service_edit(sid: int, request: Request, db: AsyncSession = Depends(ge
     require_admin(request)
     svc = (await db.execute(select(Service).where(Service.id == sid))).scalar_one_or_none()
     if not svc: raise HTTPException(404)
-    return templates.TemplateResponse("admin/service_form.html", {
-        **admin_ctx(request), "service": svc, "auto_seo": service_seo(svc)
-    })
+    return templates.TemplateResponse("admin/service_form.html", {**admin_ctx(request), "service": svc, "auto_seo": service_seo(svc)})
 
 @router.post("/services/{sid}/edit")
 async def service_update(
-    sid: int, request: Request,
-    name: str = Form(...), description: str = Form(""), short_description: str = Form(""),
-    price_from: float = Form(0), price_to: float = Form(0),
-    icon: str = Form("shield"), is_active: bool = Form(True), is_featured: bool = Form(False),
-    seo_title: str = Form(""), seo_description: str = Form(""),
-    sort_order: int = Form(0),
+    sid: int, request: Request, name: str = Form(...), description: str = Form(""), short_description: str = Form(""),
+    price_from: float = Form(0), price_to: float = Form(0), icon: str = Form("shield"),
+    is_active: bool = Form(True), is_featured: bool = Form(False),
+    seo_title: str = Form(""), seo_description: str = Form(""), sort_order: int = Form(0),
     image: Optional[UploadFile] = File(None), delete_image: str = Form(""),
     db: AsyncSession = Depends(get_db)
 ):
@@ -521,10 +470,8 @@ async def service_update(
     svc.name = name; svc.description = description; svc.short_description = short_description
     svc.price_from = price_from; svc.price_to = price_to; svc.icon = icon
     svc.is_active = is_active; svc.is_featured = is_featured; svc.sort_order = sort_order
-    if delete_image:
-        _delete_file(svc.image_url); svc.image_url = ""
-    if image and image.filename:
-        svc.image_url = await save_upload(image)
+    if delete_image: _delete_file(svc.image_url); svc.image_url = ""
+    if image and image.filename: svc.image_url = await save_upload(image)
     svc.seo_title = seo_title if seo_title.strip() else service_seo(svc)["title"]
     svc.seo_description = seo_description if seo_description.strip() else service_seo(svc)["description"]
     await db.commit()
@@ -538,7 +485,7 @@ async def service_delete(sid: int, request: Request, db: AsyncSession = Depends(
     return RedirectResponse("/admin/services", status_code=302)
 
 
-# ─── Blog ──────────────────────────────────────────────────
+# ─── Blog ────────────────────────────────────────────────────
 
 @router.get("/blog", response_class=HTMLResponse)
 async def blog_list(request: Request, db: AsyncSession = Depends(get_db)):
@@ -553,17 +500,13 @@ async def blog_new(request: Request):
 
 @router.post("/blog/new")
 async def blog_create(
-    request: Request,
-    title: str = Form(...), excerpt: str = Form(""), content: str = Form(""),
-    is_published: bool = Form(False),
-    seo_title: str = Form(""), seo_description: str = Form(""), seo_keywords: str = Form(""),
-    cover: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    request: Request, title: str = Form(...), excerpt: str = Form(""), content: str = Form(""),
+    is_published: bool = Form(False), seo_title: str = Form(""), seo_description: str = Form(""),
+    seo_keywords: str = Form(""), cover: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     cover_image = ""
-    if cover and cover.filename:
-        cover_image = await save_upload(cover)
+    if cover and cover.filename: cover_image = await save_upload(cover)
     post = BlogPost(title=title, slug=slugify(title), excerpt=excerpt, content=content,
                     is_published=is_published, cover_image=cover_image, seo_keywords=seo_keywords)
     db.add(post)
@@ -583,20 +526,16 @@ async def blog_edit(pid: int, request: Request, db: AsyncSession = Depends(get_d
 
 @router.post("/blog/{pid}/edit")
 async def blog_update(
-    pid: int, request: Request,
-    title: str = Form(...), excerpt: str = Form(""), content: str = Form(""),
-    is_published: bool = Form(False),
-    seo_title: str = Form(""), seo_description: str = Form(""), seo_keywords: str = Form(""),
-    cover: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    pid: int, request: Request, title: str = Form(...), excerpt: str = Form(""), content: str = Form(""),
+    is_published: bool = Form(False), seo_title: str = Form(""), seo_description: str = Form(""),
+    seo_keywords: str = Form(""), cover: Optional[UploadFile] = File(None), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     post = (await db.execute(select(BlogPost).where(BlogPost.id == pid))).scalar_one_or_none()
     if not post: raise HTTPException(404)
     post.title = title; post.excerpt = excerpt; post.content = content
     post.is_published = is_published; post.seo_keywords = seo_keywords
-    if cover and cover.filename:
-        post.cover_image = await save_upload(cover)
+    if cover and cover.filename: post.cover_image = await save_upload(cover)
     post.seo_title = seo_title if seo_title.strip() else blog_seo(post)["title"]
     post.seo_description = seo_description if seo_description.strip() else blog_seo(post)["description"]
     await db.commit()
@@ -610,7 +549,7 @@ async def blog_delete(pid: int, request: Request, db: AsyncSession = Depends(get
     return RedirectResponse("/admin/blog", status_code=302)
 
 
-# ─── Orders ────────────────────────────────────────────────
+# ─── Orders ──────────────────────────────────────────────────
 
 @router.get("/orders", response_class=HTMLResponse)
 async def orders_list(request: Request, db: AsyncSession = Depends(get_db)):
@@ -635,7 +574,7 @@ async def order_status(oid: int, request: Request, status: str = Form(...), db: 
     return RedirectResponse(f"/admin/orders/{oid}", status_code=302)
 
 
-# ─── Parser ────────────────────────────────────────────────
+# ─── Parser ──────────────────────────────────────────────────
 
 @router.post("/run-parser")
 async def run_parser_now(request: Request):
@@ -646,244 +585,116 @@ async def run_parser_now(request: Request):
     return RedirectResponse("/admin/", status_code=302)
 
 
-# ─── Helpers ───────────────────────────────────────────────
-
-async def save_upload(file: UploadFile) -> str:
-    ext = Path(file.filename).suffix.lower()
-    if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}:
-        raise HTTPException(400, "Недопустимый формат файла")
-    fname = f"{uuid.uuid4().hex}{ext}"
-    dest = UPLOAD_DIR / fname
-    content = await file.read()
-    with open(dest, "wb") as f:
-        f.write(content)
-    return f"/static/uploads/{fname}"
-
-def _delete_file(path: str):
-    if not path:
-        return
-    try:
-        full = Path("app") / path.lstrip("/")
-        if full.exists():
-            full.unlink()
-    except Exception:
-        pass
-
+# ─── Bulk edit ───────────────────────────────────────────────
 
 @router.post("/products/bulk-edit")
 async def products_bulk_edit(
-    request: Request,
-    product_ids: str = Form(...),
-    action_category_id: Optional[int] = Form(None),
-    action_brand_id: Optional[int] = Form(None),
-    price_action: str = Form(""),
-    price_value: float = Form(0),
-    db: AsyncSession = Depends(get_db)
+    request: Request, product_ids: str = Form(...),
+    action_category_id: Optional[int] = Form(None), action_brand_id: Optional[int] = Form(None),
+    price_action: str = Form(""), price_value: float = Form(0), db: AsyncSession = Depends(get_db)
 ):
     require_admin(request)
     ids = [int(x) for x in product_ids.split(",") if x.strip().isdigit()]
-    if not ids:
-        return RedirectResponse("/admin/products", status_code=302)
-
+    if not ids: return RedirectResponse("/admin/products", status_code=302)
     products = (await db.execute(select(Product).where(Product.id.in_(ids)))).scalars().all()
-
     for p in products:
-        if action_category_id:
-            p.category_id = action_category_id
+        if action_category_id: p.category_id = action_category_id
         if action_brand_id:
             b = (await db.execute(select(Brand).where(Brand.id == action_brand_id))).scalar_one_or_none()
-            if b:
-                p.brand_id = action_brand_id
-                p.brand = b.name
+            if b: p.brand_id = action_brand_id; p.brand = b.name
         if price_action and price_value > 0:
-            if price_action == "plus_pct":
-                p.old_price = 0
-                p.price = round(p.price * (1 + price_value / 100), 2)
-            elif price_action == "minus_pct":
-                p.old_price = 0
-                p.price = round(p.price * (1 - price_value / 100), 2)
-
+            if price_action == "plus_pct": p.old_price = 0; p.price = round(p.price * (1 + price_value / 100), 2)
+            elif price_action == "minus_pct": p.old_price = 0; p.price = round(p.price * (1 - price_value / 100), 2)
     await db.commit()
     return RedirectResponse("/admin/products", status_code=302)
 
+
+# ─── Import ──────────────────────────────────────────────────
 
 @router.get("/import", response_class=HTMLResponse)
 async def import_page(request: Request, db: AsyncSession = Depends(get_db)):
     require_admin(request)
     cats = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
     brands = (await db.execute(select(Brand).order_by(Brand.name))).scalars().all()
-    return templates.TemplateResponse("admin/import.html", {
-        **admin_ctx(request), "categories": cats, "brands": brands
-    })
-
+    return templates.TemplateResponse("admin/import.html", {**admin_ctx(request), "categories": cats, "brands": brands})
 
 @router.post("/import/preview")
-async def import_preview(
-    request: Request,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
+async def import_preview(request: Request, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     require_admin(request)
     try:
         import openpyxl, io
         content = await file.read()
         wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
         ws = wb.active
-
         headers = {}
         first_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
         for i, h in enumerate(first_row):
-            if h:
-                headers[str(h).strip().lower()] = i
-
+            if h: headers[str(h).strip().lower()] = i
         rows = []
         for row in ws.iter_rows(min_row=2, values_only=True):
-            if not any(v for v in row if v is not None):
-                continue
+            if not any(v for v in row if v is not None): continue
             def get(key, fallback_idx):
                 idx = headers.get(key, fallback_idx)
                 return row[idx] if idx < len(row) else None
-
             name = get('название', 0)
-            if not name:
-                continue
-
-            rows.append({
-                "name": str(name).strip(),
-                "short_description": str(get('краткое описание', 2) or '').strip()[:500],
-                "price": float(get('цена', 9) or 0),
-                "category": str(get('категория', 11) or '').strip(),
-                "brand": str(get('бренд', 13) or '').strip(),
-            })
-
-        import json, tempfile
+            if not name: continue
+            rows.append({"name": str(name).strip(), "short_description": str(get('краткое описание', 2) or '').strip()[:500],
+                         "price": float(get('цена', 9) or 0), "category": str(get('категория', 11) or '').strip(), "brand": str(get('бренд', 13) or '').strip()})
+        import tempfile
         tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, dir='/tmp')
-        json.dump(rows, tmp, ensure_ascii=False)
-        tmp.close()
-
+        json.dump(rows, tmp, ensure_ascii=False); tmp.close()
         cats = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
         brands_list = (await db.execute(select(Brand).order_by(Brand.name))).scalars().all()
-
-        file_cats = sorted(set(r['category'] for r in rows if r['category']))
-        file_brands = sorted(set(r['brand'] for r in rows if r['brand']))
-
         return templates.TemplateResponse("admin/import_preview.html", {
-            **admin_ctx(request),
-            "rows": rows[:5],
-            "total": len(rows),
-            "file_cats": file_cats,
-            "file_brands": file_brands,
-            "categories": cats,
-            "brands_list": brands_list,
-            "tmp_file": tmp.name,
+            **admin_ctx(request), "rows": rows[:5], "total": len(rows),
+            "file_cats": sorted(set(r['category'] for r in rows if r['category'])),
+            "file_brands": sorted(set(r['brand'] for r in rows if r['brand'])),
+            "categories": cats, "brands_list": brands_list, "tmp_file": tmp.name,
         })
     except Exception as e:
-        return templates.TemplateResponse("admin/import.html", {
-            **admin_ctx(request),
-            "error": f"Ошибка чтения файла: {e}",
-            "categories": [], "brands": []
-        })
-
+        return templates.TemplateResponse("admin/import.html", {**admin_ctx(request), "error": f"Ошибка: {e}", "categories": [], "brands": []})
 
 @router.post("/import/execute")
-async def import_execute(
-    request: Request,
-    tmp_file: str = Form(...),
-    db: AsyncSession = Depends(get_db)
-):
+async def import_execute(request: Request, tmp_file: str = Form(...), db: AsyncSession = Depends(get_db)):
     require_admin(request)
-    import json
-    from app.services.seo import slugify, product_seo
-
     try:
-        with open(tmp_file) as f:
-            rows = json.load(f)
-    except Exception as e:
-        raise HTTPException(400, f"Ошибка: {e}")
-
+        with open(tmp_file) as f: rows = json.load(f)
+    except Exception as e: raise HTTPException(400, f"Ошибка: {e}")
     form = await request.form()
-
-    cat_map = {}
-    brand_map = {}
-
-    for key, val in form.items():
-        if key.startswith("cat_map_") and val:
-            file_cat = key[len("cat_map_"):]
-            cat_map[file_cat] = int(val)
-        if key.startswith("brand_map_") and val:
-            file_brand = key[len("brand_map_"):]
-            brand_map[file_brand] = int(val)
-
-    created = 0
-    updated = 0
-    errors = 0
-
+    cat_map = {k[len("cat_map_"):]: int(v) for k, v in form.items() if k.startswith("cat_map_") and v}
+    brand_map = {k[len("brand_map_"):]: int(v) for k, v in form.items() if k.startswith("brand_map_") and v}
+    created = updated = errors = 0
     for row in rows:
         try:
-            name = row['name']
-            slug = slugify(name)
-
-            existing = (await db.execute(
-                select(Product).where(Product.slug == slug)
-            )).scalar_one_or_none()
-
-            category_id = cat_map.get(row['category'])
-            brand_id = brand_map.get(row['brand'])
-            brand_name = row['brand']
-
+            name = row['name']; slug = slugify(name)
+            existing = (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none()
+            category_id = cat_map.get(row['category']); brand_id = brand_map.get(row['brand']); brand_name = row['brand']
             if brand_id:
                 b = (await db.execute(select(Brand).where(Brand.id == brand_id))).scalar_one_or_none()
-                if b:
-                    brand_name = b.name
-
+                if b: brand_name = b.name
             if existing:
-                existing.short_description = row['short_description']
-                existing.price = row['price']
-                if category_id:
-                    existing.category_id = category_id
-                if brand_id:
-                    existing.brand_id = brand_id
-                    existing.brand = brand_name
-                elif row['brand']:
-                    existing.brand = row['brand']
+                existing.short_description = row['short_description']; existing.price = row['price']
+                if category_id: existing.category_id = category_id
+                if brand_id: existing.brand_id = brand_id; existing.brand = brand_name
+                elif row['brand']: existing.brand = row['brand']
                 updated += 1
             else:
-                check = (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none()
-                if check:
-                    slug = f"{slug}-{created}"
-
-                p = Product(
-                    name=name, slug=slug,
-                    short_description=row['short_description'],
-                    price=row['price'],
-                    category_id=category_id,
-                    brand_id=brand_id,
-                    brand=brand_name,
-                    is_active=True,
-                )
-                db.add(p)
-                await db.flush()
-                p.seo_title = product_seo(p)["title"]
-                p.seo_description = product_seo(p)["description"]
+                if (await db.execute(select(Product).where(Product.slug == slug))).scalar_one_or_none(): slug = f"{slug}-{created}"
+                p = Product(name=name, slug=slug, short_description=row['short_description'], price=row['price'],
+                            category_id=category_id, brand_id=brand_id, brand=brand_name, is_active=True)
+                db.add(p); await db.flush()
+                p.seo_title = product_seo(p)["title"]; p.seo_description = product_seo(p)["description"]
                 created += 1
         except Exception as e:
             errors += 1
-            import logging
-            logging.getLogger(__name__).error(f"Import error row {row.get('name')}: {e}")
-
+            import logging; logging.getLogger(__name__).error(f"Import error {row.get('name')}: {e}")
     await db.commit()
+    try: os.unlink(tmp_file)
+    except: pass
+    return templates.TemplateResponse("admin/import_result.html", {**admin_ctx(request), "created": created, "updated": updated, "errors": errors})
 
-    import os
-    try:
-        os.unlink(tmp_file)
-    except Exception:
-        pass
 
-    return templates.TemplateResponse("admin/import_result.html", {
-        **admin_ctx(request),
-        "created": created, "updated": updated, "errors": errors
-    })
-
+# ─── Upload image ────────────────────────────────────────────
 
 @router.post("/upload-image")
 async def upload_image(request: Request, file: UploadFile = File(...)):
@@ -893,3 +704,63 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
         return {"url": url}
     except Exception as e:
         return {"error": str(e)}
+
+
+# ─── Helpers ─────────────────────────────────────────────────
+
+async def save_upload(file: UploadFile, allowed_ext=None) -> str:
+    ext = Path(file.filename).suffix.lower()
+    if allowed_ext is None:
+        allowed_ext = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg",
+                       ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar", ".dwg", ".txt"}
+    if ext not in allowed_ext:
+        raise HTTPException(400, f"Недопустимый формат файла: {ext}")
+    fname = f"{uuid.uuid4().hex}{ext}"
+    dest = UPLOAD_DIR / fname
+    content = await file.read()
+    with open(dest, "wb") as f:
+        f.write(content)
+    return f"/static/uploads/{fname}"
+
+def _delete_file(path: str):
+    if not path: return
+    try:
+        full = Path("app") / path.lstrip("/")
+        if full.exists(): full.unlink()
+    except: pass
+
+async def _parse_files_from_form(form, existing=None) -> list:
+    """Собирает файлы для скачивания из данных формы."""
+    result = []
+
+    # Сохраняем существующие файлы (которые не удалены)
+    if existing:
+        deleted_ids_str = form.get("deleted_file_ids", "")
+        deleted_ids = set(int(x) for x in deleted_ids_str.split(",") if x.strip().isdigit())
+        existing_count = int(form.get("existing_files_count", 0))
+        for i in range(existing_count):
+            if i not in deleted_ids:
+                fname = form.get(f"existing_file_name_{i}")
+                furl = form.get(f"existing_file_url_{i}")
+                if fname and furl:
+                    result.append({"name": str(fname), "url": str(furl)})
+
+    # Добавляем новые файлы
+    idx = 0
+    while True:
+        file_name = form.get(f"new_file_name_{idx}")
+        file_obj = form.get(f"new_file_{idx}")
+        if file_name is None and file_obj is None:
+            break
+        if file_name and file_obj and hasattr(file_obj, 'filename') and file_obj.filename:
+            try:
+                url = await save_upload(file_obj)
+                result.append({"name": str(file_name), "url": url})
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"File upload error: {e}")
+        idx += 1
+        if idx > 50:
+            break
+
+    return result

@@ -6,347 +6,293 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 <style>
-/* Quill тема под наш дизайн */
-.ql-toolbar { background: #1a2535 !important; border-color: rgba(0,229,255,0.15) !important; border-radius: 6px 6px 0 0; }
-.ql-container { background: #080d11 !important; border-color: rgba(0,229,255,0.15) !important; border-radius: 0 0 6px 6px; }
-.ql-editor { color: #e8edf2 !important; font-size: 14px; line-height: 1.7; min-height: 200px; }
-.ql-editor.ql-blank::before { color: #4a5f75 !important; font-style: normal !important; }
-.ql-picker, .ql-picker-label { color: #7a8fa8 !important; }
-.ql-picker-options { background: #1a2535 !important; border-color: rgba(0,229,255,0.15) !important; }
-.ql-stroke { stroke: #7a8fa8 !important; }
-.ql-fill { fill: #7a8fa8 !important; }
-.ql-picker-item:hover, .ql-picker-label:hover { color: #00e5ff !important; }
-.ql-active .ql-stroke { stroke: #00e5ff !important; }
-.ql-active .ql-fill { fill: #00e5ff !important; }
-/* Короткий редактор */
-#short-quill .ql-editor { min-height: 100px; }
-
-/* Секция фото */
-.photo-section {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 6px; padding: 16px; margin-top: 8px;
-}
-.photo-section-title {
-  font-size: 12px; color: var(--muted); text-transform: uppercase;
-  letter-spacing: 0.06em; margin-bottom: 10px; font-weight: 600;
-}
-.main-photo-preview {
-  position: relative; display: inline-block;
-}
-.main-photo-preview img {
-  width: 120px; height: 120px; object-fit: contain;
-  border-radius: 6px; border: 2px solid var(--accent);
-  background: #0a0f14; padding: 4px;
-}
-.main-photo-badge {
-  position: absolute; top: -8px; left: -8px;
-  background: var(--accent); color: #000;
-  font-size: 10px; font-weight: 700; padding: 2px 6px;
-  border-radius: 4px; text-transform: uppercase;
-}
-.extra-photos-grid {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
-}
-.extra-photo-item {
-  position: relative;
-}
-.extra-photo-item img {
-  width: 72px; height: 72px; object-fit: contain;
-  border-radius: 6px; border: 1px solid var(--border);
-  background: #0a0f14; padding: 3px;
-}
-.del-photo-btn {
-  position: absolute; top: 3px; right: 3px;
-  background: rgba(255,77,109,0.9); border-radius: 50%;
-  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 10px; color: white; border: none;
-}
-.del-photo-btn input { display: none; }
+.ql-toolbar{background:#1a2535!important;border-color:rgba(0,229,255,0.15)!important;border-radius:6px 6px 0 0}
+.ql-container{background:#080d11!important;border-color:rgba(0,229,255,0.15)!important;border-radius:0 0 6px 6px}
+.ql-editor{color:#e8edf2!important;font-size:14px;line-height:1.7;min-height:180px}
+.ql-editor.ql-blank::before{color:#4a5f75!important;font-style:normal!important}
+.ql-picker,.ql-picker-label{color:#7a8fa8!important}
+.ql-picker-options{background:#1a2535!important;border-color:rgba(0,229,255,0.15)!important}
+.ql-stroke{stroke:#7a8fa8!important}.ql-fill{fill:#7a8fa8!important}
+.ql-active .ql-stroke{stroke:#00e5ff!important}.ql-active .ql-fill{fill:#00e5ff!important}
+#short-quill .ql-editor{min-height:100px}
+.photo-zone{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;margin-top:8px}
+.photo-zone-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:600}
+.main-photo-wrap{position:relative;display:inline-block}
+.main-photo-wrap img{width:110px;height:110px;object-fit:contain;border-radius:6px;border:2px solid var(--accent);background:#0a0f14;padding:4px}
+.main-photo-badge{position:absolute;top:-8px;left:-8px;background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+.extra-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.extra-item{position:relative}
+.extra-item img{width:68px;height:68px;object-fit:contain;border-radius:6px;border:1px solid var(--border);background:#0a0f14;padding:3px}
+.del-btn{position:absolute;top:3px;right:3px;background:rgba(255,77,109,.9);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#fff;border:none}
+.del-btn input{display:none}
+/* Файлы */
+.file-row{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:8px}
+.file-row-name{flex:1;font-size:13px}
+.file-row-url{font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 
 <form method="post" enctype="multipart/form-data" id="pform">
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
-    <div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
+<div>
 
-      <!-- ОСНОВНОЕ -->
-      <div class="card">
-        <div class="card-title">Основное</div>
-        <div class="fg">
-          <label>Название *</label>
-          <input type="text" name="name" value="{{ product.name if product else '' }}" required>
-        </div>
-        <div class="form-row">
-          <div class="fg">
-            <label>Артикул (SKU)</label>
-            <input type="text" name="sku" value="{{ product.sku if product else '' }}" placeholder="DS-2CD2143G2-I">
-          </div>
-          <div class="fg">
-            <label>Бренд из справочника</label>
-            <select name="brand_id" onchange="updateBrandName(this)">
-              <option value="">— выбрать —</option>
-              {% for b in brands %}
-              <option value="{{ b.id }}" data-name="{{ b.name }}" {{ 'selected' if product and product.brand_id == b.id }}>{{ b.name }}</option>
-              {% endfor %}
-            </select>
-            <input type="hidden" name="brand" id="brand_name_input" value="{{ product.brand if product else '' }}">
-            <input type="text" style="margin-top:6px" placeholder="Или введите вручную" id="brand_manual"
-                   value="{{ product.brand if product and not product.brand_id else '' }}"
-                   oninput="document.getElementById('brand_name_input').value=this.value">
-          </div>
-        </div>
-        <div class="fg">
-          <label>Категория</label>
-          <select name="category_id">
-            <option value="">— Без категории —</option>
-            {% for cat in categories %}
-            <option value="{{ cat.id }}" {{ 'selected' if product and product.category_id == cat.id }}>{{ '└─ ' if cat.parent_id else '' }}{{ cat.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="fg">
-          <label>Краткое описание <span style="color:var(--muted);font-size:11px">(отображается в каталоге)</span></label>
-          <div id="short-quill"></div>
-          <textarea name="short_description" id="short-hidden" style="display:none">{{ product.short_description|safe if product and product.short_description else '' }}</textarea>
-        </div>
-
-        <div class="fg" style="margin-top:8px">
-          <label>Полное описание <span style="color:var(--muted);font-size:11px">(на странице товара)</span></label>
-          <div id="desc-quill"></div>
-          <textarea name="description" id="desc-hidden" style="display:none">{{ product.description|safe if product and product.description else '' }}</textarea>
-        </div>
-      </div>
-
-      <!-- ФОТО И ВИДЕО -->
-      <div class="card">
-        <div class="card-title">Фото и видео</div>
-
-        <!-- ОСНОВНОЕ ФОТО -->
-        <div class="fg">
-          <label>
-            Основное фото
-            <span style="color:var(--muted);font-size:11px;font-weight:400"> — отображается в каталоге и карточке товара</span>
-          </label>
-          {% set main_img = product.images[0] if product and product.images else '' %}
-          {% if main_img %}
-          <div class="photo-section" style="margin-bottom:12px">
-            <div class="photo-section-title">Текущее главное фото</div>
-            <div class="main-photo-preview">
-              <span class="main-photo-badge">Главное</span>
-              <img src="{{ main_img }}" alt="Основное фото">
-            </div>
-            <label class="fg-check" style="margin-top:10px">
-              <input type="checkbox" name="delete_main_image" value="{{ main_img }}" onchange="updateDelList()">
-              Удалить основное фото
-            </label>
-          </div>
-          {% endif %}
-          <input type="file" name="main_image" accept="image/*">
-          <div style="font-size:12px;color:var(--muted);margin-top:6px">Загрузите новое основное фото (заменит текущее)</div>
-        </div>
-
-        <!-- ДОПОЛНИТЕЛЬНЫЕ ФОТО -->
-        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
-          <label>
-            Дополнительные фото
-            <span style="color:var(--muted);font-size:11px;font-weight:400"> — только на странице самого товара</span>
-          </label>
-          {% if product and product.images and product.images|length > 1 %}
-          <div class="photo-section" style="margin-bottom:12px">
-            <div class="photo-section-title">Текущие дополнительные фото</div>
-            <div class="extra-photos-grid">
-              {% for img in product.images[1:] %}
-              <div class="extra-photo-item">
-                <img src="{{ img }}" alt="доп фото">
-                <label class="del-photo-btn" title="Удалить">
-                  <input type="checkbox" name="del_img" value="{{ img }}" onchange="updateDelList()">✕
-                </label>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
-          <input type="file" name="extra_images" multiple accept="image/*">
-          <div style="font-size:12px;color:var(--muted);margin-top:6px">Можно загрузить несколько дополнительных фото</div>
-          <input type="hidden" name="delete_images" id="delete_images" value="">
-        </div>
-
-        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
-          <label>Ссылка на видеообзор (RuTube)</label>
-          <input type="url" name="video_url" value="{{ product.video_url if product else '' }}" placeholder="https://rutube.ru/video/...">
-        </div>
-      </div>
-
-      <!-- ХАРАКТЕРИСТИКИ -->
-      <div class="card">
-        <div class="card-title">Характеристики (JSON)</div>
-        <div class="fg">
-          <label>Формат: {"Разрешение": "4 МП", "Угол обзора": "99°"}</label>
-          <textarea name="specs_json" rows="5" style="font-family:monospace;font-size:13px">{{ product.specs|tojson(indent=2) if product and product.specs else '{}' }}</textarea>
-        </div>
-      </div>
-
-      <!-- SEO -->
-      <div class="card">
-        <div class="card-title">SEO</div>
-        {% if auto_seo %}
-        <div style="background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:12px">
-          <div style="color:var(--accent);font-weight:600;margin-bottom:6px">🤖 Автогенерация если оставить пустым:</div>
-          <div style="color:var(--muted);margin-bottom:4px"><b>Заголовок:</b> {{ auto_seo.title }}</div>
-          <div style="color:var(--muted)"><b>Описание:</b> {{ auto_seo.description }}</div>
-        </div>
-        {% endif %}
-        <div class="fg"><label>SEO заголовок</label><input type="text" name="seo_title" value="{{ product.seo_title if product else '' }}" maxlength="70"></div>
-        <div class="fg"><label>SEO описание</label><textarea name="seo_description" rows="2" maxlength="160">{{ product.seo_description if product else '' }}</textarea></div>
-      </div>
-
+  <!-- ОСНОВНОЕ -->
+  <div class="card">
+    <div class="card-title">Основное</div>
+    <div class="fg"><label>Название *</label>
+      <input type="text" name="name" value="{{ product.name if product else '' }}" required>
     </div>
-
-    <!-- ПРАВАЯ КОЛОНКА -->
-    <div>
-      <div class="card">
-        <div class="card-title">Цена</div>
-        <div class="fg"><label>Цена, ₽</label><input type="number" name="price" value="{{ product.price if product else '0' }}" step="0.01" min="0"></div>
-        <div class="fg"><label>Старая цена, ₽</label><input type="number" name="old_price" value="{{ product.old_price if product else '0' }}" step="0.01" min="0"></div>
-        <label class="fg-check"><input type="checkbox" name="in_stock" value="true" {{ 'checked' if not product or product.in_stock }}> В наличии</label>
+    <div class="form-row">
+      <div class="fg"><label>Артикул (SKU)</label>
+        <input type="text" name="sku" value="{{ product.sku if product else '' }}" placeholder="DS-2CD2143G2-I">
       </div>
-
-      <div class="card">
-        <div class="card-title">Настройки</div>
-        <label class="fg-check"><input type="checkbox" name="is_active" value="true" {{ 'checked' if not product or product.is_active }}> Активен</label>
-        <label class="fg-check"><input type="checkbox" name="is_featured" value="true" {{ 'checked' if product and product.is_featured }}> На главной</label>
-        <div class="fg" style="margin-top:12px"><label>Сортировка</label><input type="number" name="sort_order" value="{{ product.sort_order if product else '0' }}"></div>
+      <div class="fg"><label>Бренд из справочника</label>
+        <select name="brand_id" onchange="updateBrandName(this)">
+          <option value="">— выбрать —</option>
+          {% for b in brands %}
+          <option value="{{ b.id }}" data-name="{{ b.name }}" {{ 'selected' if product and product.brand_id == b.id }}>{{ b.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="brand" id="brand_name_input" value="{{ product.brand if product else '' }}">
+        <input type="text" style="margin-top:6px" placeholder="Или введите вручную" id="brand_manual"
+               value="{{ product.brand if product and not product.brand_id else '' }}"
+               oninput="document.getElementById('brand_name_input').value=this.value">
       </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
-          {{ 'Сохранить' if product else 'Создать товар' }}
-        </button>
-        <a href="/admin/products" class="btn btn-secondary" style="width:100%;justify-content:center">Отмена</a>
-      </div>
+    </div>
+    <div class="fg"><label>Категория</label>
+      <select name="category_id">
+        <option value="">— Без категории —</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {{ 'selected' if product and product.category_id == cat.id }}>{{ '└─ ' if cat.parent_id else '' }}{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="fg">
+      <label>Краткое описание <span style="color:var(--muted);font-size:11px">(в каталоге и карточке товара)</span></label>
+      <div id="short-quill"></div>
+      <textarea name="short_description" id="short-hidden" style="display:none">{{ product.short_description|safe if product and product.short_description else '' }}</textarea>
+    </div>
+    <div class="fg" style="margin-top:8px">
+      <label>Полное описание <span style="color:var(--muted);font-size:11px">(вкладка на странице товара)</span></label>
+      <div id="desc-quill"></div>
+      <textarea name="description" id="desc-hidden" style="display:none">{{ product.description|safe if product and product.description else '' }}</textarea>
     </div>
   </div>
+
+  <!-- ФОТО -->
+  <div class="card">
+    <div class="card-title">Фото и видео</div>
+
+    <div class="fg">
+      <label>Основное фото <span style="color:var(--muted);font-size:11px">— показывается в каталоге</span></label>
+      {% set main_img = product.images[0] if product and product.images else '' %}
+      {% if main_img %}
+      <div class="photo-zone" style="margin-bottom:10px">
+        <div class="photo-zone-title">Текущее главное фото</div>
+        <div class="main-photo-wrap">
+          <span class="main-photo-badge">ГЛАВНОЕ</span>
+          <img src="{{ main_img }}" alt="главное фото">
+        </div>
+        <label class="fg-check" style="margin-top:8px">
+          <input type="checkbox" name="delete_main_image" value="{{ main_img }}" onchange="updateDelList()"> Удалить
+        </label>
+      </div>
+      {% endif %}
+      <input type="file" name="main_image" accept="image/*">
+    </div>
+
+    <div class="fg" style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px">
+      <label>Дополнительные фото <span style="color:var(--muted);font-size:11px">— только на странице товара</span></label>
+      {% if product and product.images and product.images|length > 1 %}
+      <div class="photo-zone" style="margin-bottom:10px">
+        <div class="photo-zone-title">Текущие дополнительные фото</div>
+        <div class="extra-grid">
+          {% for img in product.images[1:] %}
+          <div class="extra-item">
+            <img src="{{ img }}" alt="доп фото">
+            <label class="del-btn" title="Удалить">
+              <input type="checkbox" name="del_img" value="{{ img }}" onchange="updateDelList()">✕
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      <input type="file" name="extra_images" multiple accept="image/*">
+      <input type="hidden" name="delete_images" id="delete_images" value="">
+    </div>
+
+    <div class="fg" style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px">
+      <label>Ссылка на видеообзор (RuTube)</label>
+      <input type="url" name="video_url" value="{{ product.video_url if product else '' }}" placeholder="https://rutube.ru/video/...">
+    </div>
+  </div>
+
+  <!-- ФАЙЛЫ ДЛЯ СКАЧИВАНИЯ -->
+  <div class="card">
+    <div class="card-title">Файлы для скачивания</div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:16px">PDF, DOC, XLS и другие документы — инструкции, схемы, паспорта.</p>
+
+    {% if product and product.files %}
+    <div id="existing-files">
+      {% for f in product.files %}
+      <div class="file-row" id="frow-{{ loop.index0 }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="file-row-name">{{ f.name }}</div>
+        <div class="file-row-url" title="{{ f.url }}">{{ f.url }}</div>
+        <input type="hidden" name="existing_file_name_{{ loop.index0 }}" value="{{ f.name }}">
+        <input type="hidden" name="existing_file_url_{{ loop.index0 }}" value="{{ f.url }}">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeExistingFile({{ loop.index0 }})">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="existing_files_count" id="existing_files_count" value="{{ product.files|length }}">
+    <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" value="">
+    {% else %}
+    <input type="hidden" name="existing_files_count" value="0">
+    <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" value="">
+    {% endif %}
+
+    <div id="new-files-container"></div>
+    <button type="button" class="btn btn-secondary" style="margin-top:8px" onclick="addFileRow()">
+      + Добавить файл
+    </button>
+  </div>
+
+  <!-- ХАРАКТЕРИСТИКИ -->
+  <div class="card">
+    <div class="card-title">Характеристики (JSON)</div>
+    <div class="fg">
+      <label>Формат: {"Разрешение": "4 МП", "Угол обзора": "99°"}</label>
+      <textarea name="specs_json" rows="5" style="font-family:monospace;font-size:13px">{{ product.specs|tojson(indent=2) if product and product.specs else '{}' }}</textarea>
+    </div>
+  </div>
+
+  <!-- SEO -->
+  <div class="card">
+    <div class="card-title">SEO</div>
+    {% if auto_seo %}
+    <div style="background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:12px">
+      <div style="color:var(--accent);font-weight:600;margin-bottom:6px">🤖 Автогенерация если оставить пустым:</div>
+      <div style="color:var(--muted);margin-bottom:4px"><b>Заголовок:</b> {{ auto_seo.title }}</div>
+      <div style="color:var(--muted)"><b>Описание:</b> {{ auto_seo.description }}</div>
+    </div>
+    {% endif %}
+    <div class="fg"><label>SEO заголовок</label><input type="text" name="seo_title" value="{{ product.seo_title if product else '' }}" maxlength="70"></div>
+    <div class="fg"><label>SEO описание</label><textarea name="seo_description" rows="2" maxlength="160">{{ product.seo_description if product else '' }}</textarea></div>
+  </div>
+
+</div>
+
+<!-- ПРАВАЯ КОЛОНКА -->
+<div>
+  <div class="card">
+    <div class="card-title">Цена</div>
+    <div class="fg"><label>Цена, ₽</label><input type="number" name="price" value="{{ product.price if product else '0' }}" step="0.01" min="0"></div>
+    <div class="fg"><label>Старая цена, ₽</label><input type="number" name="old_price" value="{{ product.old_price if product else '0' }}" step="0.01" min="0"></div>
+    <label class="fg-check"><input type="checkbox" name="in_stock" value="true" {{ 'checked' if not product or product.in_stock }}> В наличии</label>
+  </div>
+  <div class="card">
+    <div class="card-title">Настройки</div>
+    <label class="fg-check"><input type="checkbox" name="is_active" value="true" {{ 'checked' if not product or product.is_active }}> Активен</label>
+    <label class="fg-check"><input type="checkbox" name="is_featured" value="true" {{ 'checked' if product and product.is_featured }}> На главной</label>
+    <div class="fg" style="margin-top:12px"><label>Сортировка</label><input type="number" name="sort_order" value="{{ product.sort_order if product else '0' }}"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">{{ 'Сохранить' if product else 'Создать товар' }}</button>
+    <a href="/admin/products" class="btn btn-secondary" style="width:100%;justify-content:center">Отмена</a>
+  </div>
+</div>
+</div>
 </form>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <script>
-// ─── Загрузка картинок через наш endpoint ──────────────
-function makeImageUploader(quillInstance) {
+function makeImageUploader(q) {
   return function() {
     const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
+    input.setAttribute('type','file'); input.setAttribute('accept','image/*'); input.click();
     input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-      const fd = new FormData();
-      fd.append('file', file);
+      const file = input.files[0]; if (!file) return;
+      const fd = new FormData(); fd.append('file', file);
       try {
-        const resp = await fetch('/admin/upload-image', { method: 'POST', body: fd });
+        const resp = await fetch('/admin/upload-image',{method:'POST',body:fd});
         const data = await resp.json();
-        if (data.url) {
-          const range = quillInstance.getSelection(true);
-          quillInstance.insertEmbed(range.index, 'image', data.url);
-          quillInstance.setSelection(range.index + 1);
-        } else {
-          alert('Ошибка загрузки: ' + (data.error || 'неизвестная'));
-        }
-      } catch(e) {
-        alert('Ошибка сети: ' + e);
-      }
+        if (data.url) { const r = q.getSelection(true); q.insertEmbed(r.index,'image',data.url); q.setSelection(r.index+1); }
+        else alert('Ошибка: '+(data.error||'unknown'));
+      } catch(e) { alert('Ошибка сети: '+e); }
     };
   };
 }
 
-// ─── Конфиг тулбара ───────────────────────────────────
-var fullToolbar = [
-  [{ 'header': [1, 2, 3, false] }],
-  ['bold', 'italic', 'underline', 'strike'],
-  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-  ['blockquote', 'code-block'],
-  ['link', 'image'],
-  [{ 'align': [] }],
-  ['clean']
-];
-
-var shortToolbar = [
-  ['bold', 'italic', 'underline'],
-  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-  ['link'],
-  ['clean']
-];
-
-// ─── Краткое описание ──────────────────────────────────
 var shortQuill = new Quill('#short-quill', {
-  theme: 'snow',
-  modules: {
-    toolbar: { container: shortToolbar }
-  },
-  placeholder: 'Краткое описание для карточки в каталоге...'
+  theme:'snow',
+  modules:{ toolbar:{ container:[['bold','italic','underline'],[{'list':'ordered'},{'list':'bullet'}],['link'],['clean']] } },
+  placeholder:'Краткое описание для каталога...'
 });
+var shortEx = document.getElementById('short-hidden').value;
+if (shortEx && shortEx.trim()) shortQuill.clipboard.dangerouslyPasteHTML(shortEx);
 
-var shortExisting = document.getElementById('short-hidden').value;
-if (shortExisting && shortExisting.trim()) {
-  shortQuill.clipboard.dangerouslyPasteHTML(shortExisting);
-}
-
-// ─── Полное описание ───────────────────────────────────
 var descQuill = new Quill('#desc-quill', {
-  theme: 'snow',
-  modules: {
-    toolbar: {
-      container: fullToolbar,
-      handlers: { image: null } // назначим ниже
-    }
-  },
-  placeholder: 'Подробное описание товара...'
+  theme:'snow',
+  modules:{ toolbar:{ container:[[{'header':[1,2,3,false]}],['bold','italic','underline','strike'],[{'list':'ordered'},{'list':'bullet'}],['blockquote','code-block'],['link','image'],[{'align':[]}],['clean']], handlers:{image:null} } },
+  placeholder:'Подробное описание товара...'
 });
-
 descQuill.getModule('toolbar').addHandler('image', makeImageUploader(descQuill));
+var descEx = document.getElementById('desc-hidden').value;
+if (descEx && descEx.trim()) descQuill.clipboard.dangerouslyPasteHTML(descEx);
 
-var descExisting = document.getElementById('desc-hidden').value;
-if (descExisting && descExisting.trim()) {
-  descQuill.clipboard.dangerouslyPasteHTML(descExisting);
-}
-
-// ─── Перед отправкой формы — выгружаем контент ────────
 document.getElementById('pform').addEventListener('submit', function() {
   document.getElementById('short-hidden').value = shortQuill.root.innerHTML;
   document.getElementById('desc-hidden').value = descQuill.root.innerHTML;
 });
 
-// ─── Бренд ────────────────────────────────────────────
 function updateBrandName(sel) {
   const opt = sel.options[sel.selectedIndex];
-  if (opt.value) {
-    document.getElementById('brand_name_input').value = opt.dataset.name || '';
-    document.getElementById('brand_manual').value = '';
-  }
+  if (opt.value) { document.getElementById('brand_name_input').value = opt.dataset.name||''; document.getElementById('brand_manual').value=''; }
 }
 
-// ─── Удаление фото ────────────────────────────────────
 function updateDelList() {
-  // Основное фото
   const mainDel = document.querySelector('input[name="delete_main_image"]:checked');
-  // Дополнительные
-  const extraDel = [...document.querySelectorAll('input[name="del_img"]:checked')].map(el => el.value);
-
-  const allDel = [];
-  if (mainDel) allDel.push(mainDel.value);
-  allDel.push(...extraDel);
-
-  document.getElementById('delete_images').value = allDel.join(',');
-
-  // Визуальная отметка на удаляемых фото
+  const extraDel = [...document.querySelectorAll('input[name="del_img"]:checked')].map(el=>el.value);
+  const all = []; if (mainDel) all.push(mainDel.value); all.push(...extraDel);
+  document.getElementById('delete_images').value = all.join(',');
   document.querySelectorAll('input[name="del_img"]').forEach(cb => {
-    const item = cb.closest('.extra-photo-item');
-    if (item) item.style.opacity = cb.checked ? '0.3' : '1';
+    const item = cb.closest('.extra-item'); if (item) item.style.opacity = cb.checked ? '0.3' : '1';
   });
-  if (mainDel) {
-    const preview = document.querySelector('.main-photo-preview');
-    if (preview) preview.style.opacity = mainDel.checked ? '0.3' : '1';
-  }
+}
+
+// ─── Файлы ──────────────────────────────────────────────
+var newFileIndex = 0;
+var deletedFiles = [];
+
+function addFileRow() {
+  const idx = newFileIndex++;
+  const container = document.getElementById('new-files-container');
+  const div = document.createElement('div');
+  div.id = 'nfrow-' + idx;
+  div.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:8px';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span style="font-size:13px;color:var(--muted)">Новый файл #${idx+1}</span>
+      <button type="button" class="btn btn-danger btn-sm" style="margin-left:auto" onclick="document.getElementById('nfrow-${idx}').remove()">✕ Убрать</button>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Псевдоним (что увидит пользователь)</label>
+        <input type="text" name="new_file_name_${idx}" placeholder="Руководство пользователя" required>
+      </div>
+      <div class="fg"><label>Файл</label>
+        <input type="file" name="new_file_${idx}" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.dwg,.txt">
+      </div>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeExistingFile(idx) {
+  const row = document.getElementById('frow-' + idx);
+  if (row) { row.style.opacity = '0.3'; row.style.pointerEvents = 'none'; }
+  deletedFiles.push(idx);
+  document.getElementById('deleted_file_ids').value = deletedFiles.join(',');
 }
 </script>
 {% endblock %}

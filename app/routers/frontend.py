@@ -36,31 +36,26 @@ def base_ctx(request: Request, footer_brands=None) -> dict:
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: AsyncSession = Depends(get_db)):
-    # ИСПРАВЛЕНО: footer_brands теперь передаётся через base_ctx
     footer_brands = await get_footer_brands(db)
 
-    # Featured products
     products_q = await db.execute(
         select(Product).where(Product.is_active == True, Product.is_featured == True)
         .order_by(Product.sort_order).limit(8)
     )
     featured = products_q.scalars().all()
 
-    # Services
     svc_q = await db.execute(
         select(Service).where(Service.is_active == True, Service.is_featured == True)
         .order_by(Service.sort_order).limit(6)
     )
     services = svc_q.scalars().all()
 
-    # Latest blog
     blog_q = await db.execute(
         select(BlogPost).where(BlogPost.is_published == True)
         .order_by(BlogPost.created_at.desc()).limit(3)
     )
     posts = blog_q.scalars().all()
 
-    # Categories
     cat_q = await db.execute(
         select(Category).where(Category.parent_id == None).order_by(Category.sort_order)
     )
@@ -89,7 +84,6 @@ async def catalog(
     brand: str = Query(""),
     db: AsyncSession = Depends(get_db)
 ):
-    # Если есть поиск/фильтр — показываем товары
     if q or brand:
         per_page = 24
         offset = (page - 1) * per_page
@@ -117,7 +111,6 @@ async def catalog(
         })
         return templates.TemplateResponse("catalog.html", ctx)
 
-    # Главная каталога — показываем корневые категории
     root_cats = (await db.execute(
         select(Category).where(Category.parent_id == None).order_by(Category.sort_order)
     )).scalars().all()
