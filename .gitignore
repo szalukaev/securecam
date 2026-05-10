@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Изображения
+uploads/
+
 # Логи
 *.log
 logs/
